@@ -44,34 +44,6 @@ func loadSecurityConfig(cfg *Config, securityPath string) error {
 		return fmt.Errorf("failed to read security config: %w", err)
 	}
 
-	// Save existing channels and ModelList before unmarshal
-	savedChannels := make(ChannelsConfig, len(cfg.Channels))
-	for name, bc := range cfg.Channels {
-		savedChannels[name] = bc
-	}
-	// savedModelList := cfg.ModelList
-
-	// Parse YAML into a yaml.Node tree to extract channels node
-	var rootNode yaml.Node
-	if err := yaml.Unmarshal(data, &rootNode); err != nil {
-		return fmt.Errorf("failed to parse security config: %w", err)
-	}
-
-	// Extract channels node (support both 'channels' and 'channel_list' keys)
-	var channelsNode *yaml.Node
-	if len(rootNode.Content) > 0 {
-		content := rootNode.Content[0].Content
-		for i := 0; i < len(content); i += 2 {
-			if i+1 < len(content) {
-				key := content[i].Value
-				if key == "channels" || key == "channel_list" {
-					channelsNode = content[i+1]
-					break
-				}
-			}
-		}
-	}
-
 	// Unmarshal non-channel fields from security.yml
 	// This will resolve encrypted values for model_list, tools, etc.
 	if err := yaml.Unmarshal(data, cfg); err != nil {
@@ -79,19 +51,6 @@ func loadSecurityConfig(cfg *Config, securityPath string) error {
 	}
 	if err := applyLegacySkillsSecurityConfig(cfg, data); err != nil {
 		return fmt.Errorf("failed to parse legacy skills security config: %w", err)
-	}
-
-	// Restore channels from saved, then manually merge from security.yml
-	cfg.Channels = make(ChannelsConfig)
-	for name, savedBC := range savedChannels {
-		cfg.Channels[name] = savedBC
-	}
-
-	// If we found a channels node in security.yml, merge it into existing channels
-	if channelsNode != nil {
-		if err := cfg.Channels.UnmarshalYAML(channelsNode); err != nil {
-			return fmt.Errorf("failed to merge channels from security config: %w", err)
-		}
 	}
 
 	return nil
@@ -260,19 +219,6 @@ func collectSensitive(v reflect.Value, values *[]string) {
 	}
 
 	t := v.Type()
-
-	// Channel: use CollectSensitiveValues() method
-	if t == reflect.TypeOf(Channel{}) {
-		if method := v.MethodByName("CollectSensitiveValues"); method.IsValid() {
-			results := method.Call(nil)
-			if len(results) > 0 {
-				if vals, ok := results[0].Interface().([]string); ok {
-					*values = append(*values, vals...)
-				}
-			}
-		}
-		return
-	}
 
 	// SecureString: collect via String() method (defined on *SecureString)
 	if t == reflect.TypeOf(SecureString{}) {

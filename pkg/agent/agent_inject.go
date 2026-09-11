@@ -3,8 +3,6 @@
 package agent
 
 import (
-	"github.com/Northlatch-Labs-LLC/labs/pkg/audio/asr"
-	"github.com/Northlatch-Labs-LLC/labs/pkg/channels"
 	"github.com/Northlatch-Labs-LLC/labs/pkg/config"
 	"github.com/Northlatch-Labs-LLC/labs/pkg/media"
 	"github.com/Northlatch-Labs-LLC/labs/pkg/tools"
@@ -17,10 +15,6 @@ func (al *AgentLoop) RegisterTool(tool tools.Tool) {
 			agent.Tools.Register(tool)
 		}
 	}
-}
-
-func (al *AgentLoop) SetChannelManager(cm *channels.Manager) {
-	al.channelManager = cm
 }
 
 func (al *AgentLoop) GetRegistry() *AgentRegistry {
@@ -45,15 +39,6 @@ func (al *AgentLoop) SetMediaStore(s media.MediaStore) {
 			agent.Tools.SetMediaStore(s)
 		}
 	}
-	registry.ForEachTool("send_tts", func(t tools.Tool) {
-		if st, ok := t.(*tools.SendTTSTool); ok {
-			st.SetMediaStore(s)
-		}
-	})
-}
-
-func (al *AgentLoop) SetTranscriber(t asr.Transcriber) {
-	al.transcriber = t
 }
 
 func (al *AgentLoop) SetReloadFunc(fn func() error) {

@@ -6,7 +6,6 @@ import (
 	"context"
 
 	"github.com/Northlatch-Labs-LLC/labs/pkg/bus"
-	"github.com/Northlatch-Labs-LLC/labs/pkg/channels"
 )
 
 // MessageBus publishes inbound and outbound messages.
@@ -30,9 +29,6 @@ type MessageBus interface {
 
 // ChannelManager manages channel lifecycle and provides channel access.
 type ChannelManager interface {
-	// GetChannel returns the channel with the given name.
-	GetChannel(name string) (channels.Channel, bool)
-
 	// GetEnabledChannels returns the list of enabled channel names.
 	GetEnabledChannels() []string
 

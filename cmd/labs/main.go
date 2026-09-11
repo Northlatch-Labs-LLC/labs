@@ -20,17 +20,13 @@ import (
 	"github.com/Northlatch-Labs-LLC/labs/cmd/labs/internal/auth"
 	"github.com/Northlatch-Labs-LLC/labs/cmd/labs/internal/cliui"
 	configcmd "github.com/Northlatch-Labs-LLC/labs/cmd/labs/internal/config"
-	"github.com/Northlatch-Labs-LLC/labs/cmd/labs/internal/cron"
-	"github.com/Northlatch-Labs-LLC/labs/cmd/labs/internal/gateway"
 	"github.com/Northlatch-Labs-LLC/labs/cmd/labs/internal/mcp"
-	"github.com/Northlatch-Labs-LLC/labs/cmd/labs/internal/migrate"
 	"github.com/Northlatch-Labs-LLC/labs/cmd/labs/internal/model"
 	"github.com/Northlatch-Labs-LLC/labs/cmd/labs/internal/onboard"
 	"github.com/Northlatch-Labs-LLC/labs/cmd/labs/internal/skills"
 	"github.com/Northlatch-Labs-LLC/labs/cmd/labs/internal/status"
 	"github.com/Northlatch-Labs-LLC/labs/cmd/labs/internal/version"
 	"github.com/Northlatch-Labs-LLC/labs/pkg/config"
-	"github.com/Northlatch-Labs-LLC/labs/pkg/updater"
 )
 
 var rootNoColor bool
@@ -132,14 +128,10 @@ labs --no-color status`,
 		onboard.NewOnboardCommand(),
 		agent.NewAgentCommand(),
 		auth.NewAuthCommand(),
-		gateway.NewGatewayCommand(),
 		status.NewStatusCommand(),
-		cron.NewCronCommand(),
 		mcp.NewMCPCommand(),
-		migrate.NewMigrateCommand(),
 		skills.NewSkillsCommand(),
 		model.NewModelCommand(),
-		updater.NewUpdateCommand("labs"),
 		version.NewVersionCommand(),
 	)
 

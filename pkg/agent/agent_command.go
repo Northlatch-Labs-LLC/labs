@@ -265,10 +265,7 @@ func (al *AgentLoop) buildCommandsRuntime(
 			return info
 		},
 		SwitchChannel: func(value string) error {
-			if al.channelManager == nil {
-				return fmt.Errorf("channel manager not initialized")
-			}
-			if _, exists := al.channelManager.GetChannel(value); !exists && value != "cli" {
+			if value != "cli" {
 				return fmt.Errorf("channel '%s' not found or not enabled", value)
 			}
 			return nil

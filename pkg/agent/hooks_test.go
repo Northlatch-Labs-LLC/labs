@@ -3,7 +3,6 @@ package agent
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"os"
 	"strings"
 	"sync"
@@ -1115,71 +1114,6 @@ func (f *errorMediaChannel) SendMedia(ctx context.Context, msg bus.OutboundMedia
 	return nil, f.sendErr
 }
 
-func TestAgentLoop_HookRespond_MediaError(t *testing.T) {
-	provider := &multiToolProvider{
-		toolCalls: []providers.ToolCall{
-			{ID: "call-1", Name: "media_tool", Arguments: map[string]any{}},
-		},
-		finalContent: "done",
-	}
-	al, agent, cleanup := newHookTestLoop(t, provider)
-	defer cleanup()
-
-	hook := &respondWithMediaHook{
-		respondTools:    map[string]bool{"media_tool": true},
-		media:           []string{"media://test/image.png"},
-		responseHandled: true,
-		forLLM:          "media sent successfully",
-	}
-	if err := al.MountHook(NamedHook("media-hook", hook)); err != nil {
-		t.Fatalf("MountHook failed: %v", err)
-	}
-
-	al.channelManager = newStartedTestChannelManager(t,
-		al.bus.(*bus.MessageBus), al.mediaStore, "discord", &errorMediaChannel{
-			sendErr: errors.New("channel unavailable"),
-		})
-
-	runtimeCh, closeRuntimeEvents := subscribeRuntimeEventsForTest(
-		t,
-		al,
-		16,
-		runtimeevents.KindAgentToolExecEnd,
-	)
-	defer closeRuntimeEvents()
-
-	_, err := al.runAgentLoop(context.Background(), agent, processOptions{
-		SessionKey:      "session-media-err",
-		Channel:         "discord",
-		ChatID:          "chat1",
-		UserMessage:     "send media",
-		DefaultResponse: defaultResponse,
-		EnableSummary:   false,
-		SendResponse:    false,
-	})
-	if err != nil {
-		t.Fatalf("runAgentLoop failed: %v", err)
-	}
-
-	events := collectRuntimeEventStream(runtimeCh)
-	endEvt, ok := findRuntimeEvent(events, runtimeevents.KindAgentToolExecEnd)
-	if !ok {
-		t.Fatal("expected ToolExecEnd event")
-	}
-	payload, ok := endEvt.Payload.(ToolExecEndPayload)
-	if !ok {
-		t.Fatalf("expected ToolExecEndPayload, got %T", endEvt.Payload)
-	}
-
-	if !payload.IsError {
-		t.Fatal("expected IsError=true when SendMedia fails")
-	}
-
-	if payload.ForLLMLen < 30 {
-		t.Fatalf("expected ForLLM to contain error message, got ForLLMLen=%d", payload.ForLLMLen)
-	}
-}
-
 func TestAgentLoop_HookRespond_BusFallback(t *testing.T) {
 	provider := &multiToolProvider{
 		toolCalls: []providers.ToolCall{
@@ -1237,77 +1171,6 @@ func TestAgentLoop_HookRespond_BusFallback(t *testing.T) {
 
 	if resp != "done" {
 		t.Fatalf("expected response 'done', got %q", resp)
-	}
-}
-
-func TestAgentLoop_HookRespond_ResponseHandledMediaPreservesOutboundContext(t *testing.T) {
-	provider := &multiToolProvider{
-		toolCalls: []providers.ToolCall{
-			{ID: "call-1", Name: "media_tool", Arguments: map[string]any{}},
-		},
-		finalContent: "done",
-	}
-	al, agent, cleanup := newHookTestLoop(t, provider)
-	defer cleanup()
-
-	hook := &respondWithMediaHook{
-		respondTools:    map[string]bool{"media_tool": true},
-		media:           []string{"media://test/image.png"},
-		responseHandled: true,
-		forLLM:          "media sent successfully",
-	}
-	if err := al.MountHook(NamedHook("media-hook", hook)); err != nil {
-		t.Fatalf("MountHook failed: %v", err)
-	}
-
-	telegramChannel := &fakeMediaChannel{fakeChannel: fakeChannel{id: "rid-telegram"}}
-	al.channelManager = newStartedTestChannelManager(t,
-		al.bus.(*bus.MessageBus), al.mediaStore, "telegram", telegramChannel)
-
-	_, err := al.runAgentLoop(context.Background(), agent, processOptions{
-		Dispatch: DispatchRequest{
-			SessionKey: "session-topic-media",
-			SessionScope: &session.SessionScope{
-				Version:    session.ScopeVersionV1,
-				AgentID:    agent.ID,
-				Channel:    "telegram",
-				Dimensions: []string{"chat"},
-				Values: map[string]string{
-					"chat": "forum:-100123/42",
-				},
-			},
-			InboundContext: &bus.InboundContext{
-				Channel:  "telegram",
-				ChatID:   "-100123",
-				TopicID:  "42",
-				ChatType: "group",
-				SenderID: "user1",
-			},
-			UserMessage: "send media",
-		},
-		DefaultResponse: defaultResponse,
-		EnableSummary:   false,
-		SendResponse:    false,
-	})
-	if err != nil {
-		t.Fatalf("runAgentLoop failed: %v", err)
-	}
-
-	if len(telegramChannel.sentMedia) != 1 {
-		t.Fatalf("expected exactly 1 sent media message, got %d", len(telegramChannel.sentMedia))
-	}
-	sent := telegramChannel.sentMedia[0]
-	if sent.Context.Channel != "telegram" || sent.Context.ChatID != "-100123" || sent.Context.TopicID != "42" {
-		t.Fatalf("unexpected media context: %+v", sent.Context)
-	}
-	if sent.AgentID != agent.ID {
-		t.Fatalf("sent media agent_id = %q, want %q", sent.AgentID, agent.ID)
-	}
-	if sent.SessionKey != "session-topic-media" {
-		t.Fatalf("sent media session_key = %q, want session-topic-media", sent.SessionKey)
-	}
-	if sent.Scope == nil || sent.Scope.Values["chat"] != "forum:-100123/42" {
-		t.Fatalf("unexpected sent media scope: %+v", sent.Scope)
 	}
 }
 

@@ -33,14 +33,14 @@ type legacyDiagnosticConfig struct {
 	Agents      legacyDiagnosticAgents `json:"agents,omitempty"`
 	Session     SessionConfig          `json:"session,omitempty"`
 	Channels    map[string]any         `json:"channels,omitempty"`
-	ChannelList ChannelsConfig         `json:"channel_list,omitempty"`
+	ChannelList json.RawMessage        `json:"channel_list,omitempty"`
 	ModelList   []map[string]any       `json:"model_list,omitempty"`
 	Gateway     GatewayConfig          `json:"gateway,omitempty"`
 	Hooks       HooksConfig            `json:"hooks,omitempty"`
 	Tools       ToolsConfig            `json:"tools,omitempty"`
-	Heartbeat   HeartbeatConfig        `json:"heartbeat,omitempty"`
-	Devices     DevicesConfig          `json:"devices,omitempty"`
-	Voice       VoiceConfig            `json:"voice,omitempty"`
+	Heartbeat   json.RawMessage        `json:"heartbeat,omitempty"`
+	Devices     json.RawMessage        `json:"devices,omitempty"`
+	Voice       json.RawMessage        `json:"voice,omitempty"`
 	Bindings    json.RawMessage        `json:"bindings,omitempty"`
 	Providers   json.RawMessage        `json:"providers,omitempty"`
 }
@@ -83,8 +83,6 @@ func migrateLegacyAgentDefaultsModel(m map[string]any) {
 // loadConfigV1 loads a version 1 config (current schema)
 func loadConfig(data []byte) (*Config, error) {
 	cfg := DefaultConfig()
-	evolutionModeExplicit := configObjectHasField(data, "evolution", "mode")
-	evolutionExplicitWithoutMode := configObjectHasTopLevelField(data, "evolution") && !evolutionModeExplicit
 
 	// Pre-scan the JSON to check how many model_list entries the user provided.
 	// Go's JSON decoder reuses existing slice backing-array elements rather than
@@ -102,9 +100,6 @@ func loadConfig(data []byte) (*Config, error) {
 
 	if err := decodeJSONWithDiagnostics(data, cfg, "config.json"); err != nil {
 		return nil, err
-	}
-	if evolutionExplicitWithoutMode {
-		cfg.Evolution.Mode = ""
 	}
 	return cfg, nil
 }
@@ -352,49 +347,9 @@ func migrateV2ToV3(m map[string]any) error {
 	migrateLegacyAgentDefaultsModel(m)
 	delete(m, "bindings")
 
-	// Rename channels → channel_list
-	if channels, ok := m["channels"]; ok {
-		delete(m, "channels")
-
-		// Convert each channel from flat to nested format
-		if chMap, ok := channels.(map[string]any); ok {
-			for k, ch := range chMap {
-				if chVal, ok := ch.(map[string]any); ok {
-					chVal["type"] = k
-					// If already has "settings" key, leave as-is
-					if _, hasSettings := chVal["settings"]; hasSettings {
-						continue
-					}
-
-					// Migrate Onebot "group_trigger_prefix" → "group_trigger.prefixes"
-					if gtp, hasGTP := chVal["group_trigger_prefix"]; hasGTP {
-						if gt, hasGT := chVal["group_trigger"].(map[string]any); hasGT {
-							if _, hasPrefixes := gt["prefixes"]; !hasPrefixes {
-								gt["prefixes"] = gtp
-							}
-						} else {
-							chVal["group_trigger"] = map[string]any{"prefixes": gtp}
-						}
-						delete(chVal, "group_trigger_prefix")
-					}
-
-					// Separate channel-specific fields into "settings"
-					settings := make(map[string]any)
-					for fieldKey, v := range chVal {
-						if _, exists := BaseFieldNames[fieldKey]; !exists {
-							settings[fieldKey] = v
-							delete(chVal, fieldKey)
-						}
-					}
-					if len(settings) > 0 {
-						chVal["settings"] = settings
-					}
-				}
-			}
-		}
-
-		m["channel_list"] = channels
-	}
+	// labs has no chat channels: drop any channel configuration a v2 file carried.
+	delete(m, "channels")
+	delete(m, "channel_list")
 
 	m["version"] = CurrentVersion
 
@@ -531,4 +486,32 @@ func mergeModelListsWithMap(mainML []any, secML map[string]any) error {
 	}
 
 	return nil
+}
+
+// mergeMap deep-merges src into a copy of dst; maps merge recursively, anything else overrides.
+func mergeMap(dst, src map[string]any) map[string]any {
+	result := make(map[string]any, len(dst))
+	for k, v := range dst {
+		result[k] = v
+	}
+	for k, srcVal := range src {
+		dstVal, exists := result[k]
+		if !exists {
+			result[k] = srcVal
+			continue
+		}
+		dstMap, dstIsMap := toMap(dstVal)
+		srcMap, srcIsMap := toMap(srcVal)
+		if dstIsMap && srcIsMap {
+			result[k] = mergeMap(dstMap, srcMap)
+		} else {
+			result[k] = srcVal
+		}
+	}
+	return result
+}
+
+func toMap(v any) (map[string]any, bool) {
+	m, ok := v.(map[string]any)
+	return m, ok
 }

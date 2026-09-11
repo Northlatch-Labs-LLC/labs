@@ -327,22 +327,8 @@ func (p *Pipeline) configuredStreamingEligible(ts *turnState, exec *turnExecutio
 }
 
 func (p *Pipeline) channelStreamingConfig(channelName string) (config.StreamingConfig, bool) {
-	if p == nil || p.Cfg == nil || p.Cfg.Channels == nil {
-		return config.StreamingConfig{}, false
-	}
-	ch := p.Cfg.Channels[channelName]
-	if ch == nil {
-		return config.StreamingConfig{}, false
-	}
-	decoded, err := ch.GetDecoded()
-	if err != nil {
-		logger.WarnCF("agent", "channel streaming config decode failed", map[string]any{
-			"channel": channelName,
-			"error":   err.Error(),
-		})
-		return config.StreamingConfig{}, false
-	}
-	return streamingConfigFromDecodedSettings(decoded)
+	// labs has no chat channels; there is never a per-channel streaming override.
+	return config.StreamingConfig{}, false
 }
 
 func streamingConfigFromDecodedSettings(decoded any) (config.StreamingConfig, bool) {

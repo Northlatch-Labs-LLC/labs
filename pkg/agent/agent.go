@@ -9,14 +9,12 @@ package agent
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
 
 	"github.com/Northlatch-Labs-LLC/labs/pkg/agent/interfaces"
-	"github.com/Northlatch-Labs-LLC/labs/pkg/audio/asr"
 	"github.com/Northlatch-Labs-LLC/labs/pkg/bus"
 	"github.com/Northlatch-Labs-LLC/labs/pkg/commands"
 	"github.com/Northlatch-Labs-LLC/labs/pkg/config"
@@ -52,10 +50,8 @@ type AgentLoop struct {
 	fallback       *providers.FallbackChain
 	channelManager interfaces.ChannelManager
 	mediaStore     media.MediaStore
-	transcriber    asr.Transcriber
 	cmdRegistry    *commands.Registry
 	mcp            mcpRuntime
-	evolution      *evolutionBridge
 	hookRuntime    hookRuntime
 	steering       *steeringQueue
 	pendingSkills  sync.Map
@@ -334,15 +330,6 @@ func (al *AgentLoop) Close() {
 				})
 		}
 	}
-	evolution := al.currentEvolutionBridge()
-	if evolution != nil {
-		if err := evolution.Close(); err != nil {
-			logger.ErrorCF("agent", "Failed to close evolution bridge",
-				map[string]any{
-					"error": err.Error(),
-				})
-		}
-	}
 
 	al.GetRegistry().Close()
 	if al.hooks != nil {
@@ -413,29 +400,14 @@ func (al *AgentLoop) ReloadProviderAndConfig(
 	// Ensure shared tools are re-registered on the new registry
 	registerSharedTools(al, cfg, al.bus, registry, provider)
 
-	newEvolution, evolutionErr := newEvolutionBridge(registry, cfg, provider)
-	if evolutionErr != nil {
-		logger.WarnCF("agent", "Failed to reinitialize evolution bridge during reload",
-			map[string]any{"error": evolutionErr.Error()})
-	}
-	if newEvolution != nil {
-		newEvolution.setCurrentCheck(al.isCurrentEvolutionBridge)
-		if err := newEvolution.subscribeRuntimeEvents(al.runtimeEvents.Channel()); err != nil {
-			logger.WarnCF("agent", "Failed to subscribe reloaded evolution bridge to runtime events",
-				map[string]any{"error": err.Error()})
-		}
-	}
-
 	// Atomically swap the config and registry under write lock
 	// This ensures readers see a consistent pair
 	al.mu.Lock()
 	oldRegistry := al.registry
-	oldEvolution := al.evolution
 
 	// Store new values
 	al.cfg = cfg
 	al.registry = registry
-	al.evolution = newEvolution
 
 	// Also update fallback chain with new config; rebuild rate limiter registry.
 	newRL := providers.NewRateLimiterRegistry()
@@ -460,12 +432,6 @@ func (al *AgentLoop) ReloadProviderAndConfig(
 	if oldMCPManager != nil {
 		if err := oldMCPManager.Close(); err != nil {
 			logger.WarnCF("agent", "Failed to close previous MCP manager during reload",
-				map[string]any{"error": err.Error()})
-		}
-	}
-	if oldEvolution != nil {
-		if err := oldEvolution.Close(); err != nil {
-			logger.WarnCF("agent", "Failed to close previous evolution bridge during reload",
 				map[string]any{"error": err.Error()})
 		}
 	}
@@ -499,17 +465,6 @@ func (al *AgentLoop) ReloadProviderAndConfig(
 // SetTranscriber injects a voice transcriber for agent-level audio transcription.
 
 // SetReloadFunc sets the callback function for triggering config reload.
-
-var audioAnnotationRe = regexp.MustCompile(`\[(voice|audio)(?::[^\]]*)?\]`)
-
-// transcribeAudioInMessage resolves audio media refs, transcribes them, and
-// replaces audio annotations in msg.Content with the transcribed text.
-// Returns the (possibly modified) message and true if audio was transcribed.
-
-// sendTranscriptionFeedback sends feedback to the user with the result of
-// audio transcription if the option is enabled. It uses Manager.SendMessage
-// which executes synchronously (rate limiting, splitting, retry) so that
-// ordering with the subsequent placeholder is guaranteed.
 
 // inferMediaType determines the media type ("image", "audio", "video", "file")
 // from a filename and MIME content type.

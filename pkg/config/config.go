@@ -27,10 +27,6 @@ var rrCounter atomic.Uint64
 // CurrentVersion is the latest config schema version
 const CurrentVersion = 3
 
-func init() {
-	initChannel()
-}
-
 // Config is the current config structure with version support.
 type Config struct {
 	// Config schema version for migration.
@@ -38,141 +34,16 @@ type Config struct {
 	Isolation IsolationConfig `json:"isolation,omitempty" yaml:"-"`
 	Agents    AgentsConfig    `json:"agents"              yaml:"-"`
 	Session   SessionConfig   `json:"session,omitempty"   yaml:"-"`
-	Evolution EvolutionConfig `json:"evolution,omitempty" yaml:"-"`
-	Channels  ChannelsConfig  `json:"channel_list"        yaml:"channel_list"`
 	ModelList SecureModelList `json:"model_list"          yaml:"model_list"` // New model-centric provider configuration
 	Gateway   GatewayConfig   `json:"gateway"             yaml:"-"`
 	Events    EventsConfig    `json:"events,omitempty"    yaml:"-"`
 	Hooks     HooksConfig     `json:"hooks,omitempty"     yaml:"-"`
 	Tools     ToolsConfig     `json:"tools"               yaml:",inline"`
-	Heartbeat HeartbeatConfig `json:"heartbeat"           yaml:"-"`
-	Devices   DevicesConfig   `json:"devices"             yaml:"-"`
-	Voice     VoiceConfig     `json:"voice"               yaml:"-"`
 	// BuildInfo contains build-time version information
 	BuildInfo BuildInfo `json:"build_info,omitempty" yaml:"-"`
 
 	// cache for sensitive values and compiled regex (computed once)
 	sensitiveCache *SensitiveDataCache
-}
-
-type EvolutionConfig struct {
-	Enabled         bool     `json:"enabled,omitempty"`
-	Mode            string   `json:"mode,omitempty"`
-	StateDir        string   `json:"state_dir,omitempty"`
-	MinTaskCount    int      `json:"min_task_count,omitempty"`
-	MinSuccessRatio float64  `json:"min_success_ratio,omitempty"`
-	ColdPathTrigger string   `json:"cold_path_trigger,omitempty"`
-	ColdPathTimes   []string `json:"cold_path_times,omitempty"`
-	// Deprecated: use MinTaskCount.
-	MinCaseCount int `json:"min_case_count,omitempty"`
-	// Deprecated: use MinSuccessRatio.
-	MinSuccessRate float64 `json:"min_success_rate,omitempty"`
-}
-
-func (c EvolutionConfig) MarshalJSON() ([]byte, error) {
-	out := struct {
-		Enabled         bool     `json:"enabled,omitempty"`
-		Mode            string   `json:"mode,omitempty"`
-		StateDir        string   `json:"state_dir,omitempty"`
-		MinTaskCount    int      `json:"min_task_count,omitempty"`
-		MinSuccessRatio float64  `json:"min_success_ratio,omitempty"`
-		ColdPathTrigger string   `json:"cold_path_trigger,omitempty"`
-		ColdPathTimes   []string `json:"cold_path_times,omitempty"`
-	}{
-		Enabled:         c.Enabled,
-		Mode:            c.Mode,
-		StateDir:        c.StateDir,
-		MinTaskCount:    c.EffectiveMinTaskCount(),
-		MinSuccessRatio: c.EffectiveMinSuccessRatio(),
-		ColdPathTrigger: strings.TrimSpace(c.ColdPathTrigger),
-		ColdPathTimes:   c.EffectiveColdPathTimes(),
-	}
-	if !out.Enabled {
-		out.Mode = ""
-		out.ColdPathTrigger = ""
-		out.ColdPathTimes = nil
-	}
-	return json.Marshal(out)
-}
-
-func (c EvolutionConfig) EffectiveMode() string {
-	if !c.Enabled {
-		return ""
-	}
-	switch strings.ToLower(strings.TrimSpace(c.Mode)) {
-	case "draft":
-		return "draft"
-	case "apply":
-		return "apply"
-	case "", "observe":
-		return "observe"
-	default:
-		return "observe"
-	}
-}
-
-func (c EvolutionConfig) RunsColdPathAutomatically() bool {
-	return c.RunsColdPathAfterTurn() || c.RunsColdPathScheduled()
-}
-
-func (c EvolutionConfig) ColdPathTriggerMode() string {
-	if c.EffectiveMode() != "draft" && c.EffectiveMode() != "apply" {
-		return ""
-	}
-	switch strings.ToLower(strings.TrimSpace(c.ColdPathTrigger)) {
-	case "", "after_turn":
-		return "after_turn"
-	case "scheduled":
-		return "scheduled"
-	case "manual", "none", "off":
-		return "manual"
-	default:
-		return "after_turn"
-	}
-}
-
-func (c EvolutionConfig) RunsColdPathAfterTurn() bool {
-	return c.ColdPathTriggerMode() == "after_turn"
-}
-
-func (c EvolutionConfig) RunsColdPathScheduled() bool {
-	return c.ColdPathTriggerMode() == "scheduled"
-}
-
-func (c EvolutionConfig) EffectiveMinTaskCount() int {
-	if c.MinTaskCount > 0 {
-		return c.MinTaskCount
-	}
-	if c.MinCaseCount > 0 {
-		return c.MinCaseCount
-	}
-	return 2
-}
-
-func (c EvolutionConfig) EffectiveMinSuccessRatio() float64 {
-	if c.MinSuccessRatio > 0 {
-		return c.MinSuccessRatio
-	}
-	if c.MinSuccessRate > 0 {
-		return c.MinSuccessRate
-	}
-	return 0.7
-}
-
-func (c EvolutionConfig) EffectiveColdPathTimes() []string {
-	out := make([]string, 0, len(c.ColdPathTimes))
-	for _, value := range c.ColdPathTimes {
-		value = strings.TrimSpace(value)
-		if value == "" {
-			continue
-		}
-		out = append(out, value)
-	}
-	return out
-}
-
-func (c EvolutionConfig) AutoAppliesDrafts() bool {
-	return c.EffectiveMode() == "apply"
 }
 
 // IsolationConfig controls subprocess isolation for commands started by Labs.
@@ -723,23 +594,6 @@ type SlackWebhookTarget struct {
 	WebhookURL SecureString `json:"webhook_url,omitzero" yaml:"webhook_url,omitempty"`
 	Username   string       `json:"username,omitempty"   yaml:"-"`
 	IconEmoji  string       `json:"icon_emoji,omitempty" yaml:"-"`
-}
-
-type HeartbeatConfig struct {
-	Enabled  bool `json:"enabled"  env:"LABS_HEARTBEAT_ENABLED"`
-	Interval int  `json:"interval" env:"LABS_HEARTBEAT_INTERVAL"` // minutes, min 5
-}
-
-type DevicesConfig struct {
-	Enabled    bool `json:"enabled"     env:"LABS_DEVICES_ENABLED"`
-	MonitorUSB bool `json:"monitor_usb" env:"LABS_DEVICES_MONITOR_USB"`
-}
-
-type VoiceConfig struct {
-	ModelName         string `json:"model_name,omitempty"         env:"LABS_VOICE_MODEL_NAME"`
-	TTSModelName      string `json:"tts_model_name,omitempty"     env:"LABS_VOICE_TTS_MODEL_NAME"`
-	EchoTranscription bool   `json:"echo_transcription"           env:"LABS_VOICE_ECHO_TRANSCRIPTION"`
-	ElevenLabsAPIKey  string `json:"elevenlabs_api_key,omitempty" env:"LABS_VOICE_ELEVENLABS_API_KEY"`
 }
 
 type ModelStreamingConfig struct {
@@ -1495,9 +1349,6 @@ func LoadConfig(path string) (*Config, error) {
 	}
 	applySkillsRegistryEnvCompat(cfg)
 
-	if err = InitChannelList(cfg.Channels); err != nil {
-		return nil, err
-	}
 	if err = cfg.ValidateTurnProfile(); err != nil {
 		return nil, err
 	}

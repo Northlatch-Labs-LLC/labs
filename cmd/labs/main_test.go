@@ -13,8 +13,8 @@ import (
 	"github.com/Northlatch-Labs-LLC/labs/pkg/config"
 )
 
-func TestNewPicoclawCommand(t *testing.T) {
-	cmd := NewPicoclawCommand()
+func TestNewLabsCommand(t *testing.T) {
+	cmd := NewLabsCommand()
 
 	require.NotNil(t, cmd)
 

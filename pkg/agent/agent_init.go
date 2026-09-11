@@ -4,14 +4,11 @@ package agent
 
 import (
 	"context"
-	"fmt"
 	"sync"
 	"time"
 
 	"github.com/Northlatch-Labs-LLC/labs/pkg/agent/interfaces"
-	"github.com/Northlatch-Labs-LLC/labs/pkg/audio/tts"
 	"github.com/Northlatch-Labs-LLC/labs/pkg/bus"
-	"github.com/Northlatch-Labs-LLC/labs/pkg/channels"
 	"github.com/Northlatch-Labs-LLC/labs/pkg/commands"
 	"github.com/Northlatch-Labs-LLC/labs/pkg/config"
 	runtimeevents "github.com/Northlatch-Labs-LLC/labs/pkg/events"
@@ -50,13 +47,6 @@ func NewAgentLoop(
 		stateManager = state.NewManager(defaultAgent.Workspace)
 	}
 
-	bridge, err := newEvolutionBridge(registry, cfg, provider)
-	if err != nil {
-		logger.WarnCF("agent", "Failed to initialize evolution bridge", map[string]any{
-			"error": err.Error(),
-		})
-	}
-
 	// Determine worker pool size from config (default: 1 = sequential)
 	workerPoolSize := cfg.Agents.Defaults.MaxParallelTurns
 	if workerPoolSize <= 0 {
@@ -70,7 +60,6 @@ func NewAgentLoop(
 		state:             stateManager,
 		fallback:          fallbackChain,
 		cmdRegistry:       commands.NewRegistry(commands.BuiltinDefinitions()),
-		evolution:         bridge,
 		steering:          newSteeringQueue(parseSteeringMode(cfg.Agents.Defaults.SteeringMode)),
 		workerSem:         make(chan struct{}, workerPoolSize),
 		ownsRuntimeEvents: true,
@@ -83,14 +72,6 @@ func NewAgentLoop(
 	if al.runtimeEvents == nil {
 		al.runtimeEvents = runtimeevents.NewBus()
 		al.ownsRuntimeEvents = true
-	}
-	if bridge != nil {
-		bridge.setCurrentCheck(al.isCurrentEvolutionBridge)
-		if err := bridge.subscribeRuntimeEvents(al.runtimeEvents.Channel()); err != nil {
-			logger.WarnCF("agent", "Failed to subscribe evolution bridge to runtime events", map[string]any{
-				"error": err.Error(),
-			})
-		}
 	}
 	al.activeReqCond = sync.NewCond(&al.activeReqMu)
 	al.refreshRuntimeEventLogger(cfg)
@@ -113,14 +94,6 @@ func registerSharedTools(
 	provider providers.LLMProvider,
 ) {
 	allowReadPaths := buildAllowReadPatterns(cfg)
-	var ttsProvider tts.TTSProvider
-	if cfg.Tools.IsToolEnabled("send_tts") {
-		ttsProvider = tts.DetectTTS(cfg)
-		if ttsProvider == nil {
-			logger.WarnCF("voice-tts", "send_tts enabled but no TTS provider configured", nil)
-		}
-	}
-
 	for _, agentID := range registry.ListAgentIDs() {
 		agent, ok := registry.GetAgent(agentID)
 		if !ok {
@@ -218,25 +191,6 @@ func registerSharedTools(
 			})
 			agent.Tools.Register(messageTool)
 		}
-		if cfg.Tools.IsToolEnabled("reaction") {
-			reactionTool := tools.NewReactionTool()
-			reactionTool.SetReactionCallback(func(ctx context.Context, channel, chatID, messageID string) error {
-				if al.channelManager == nil {
-					return fmt.Errorf("channel manager not configured")
-				}
-				ch, ok := al.channelManager.GetChannel(channel)
-				if !ok {
-					return fmt.Errorf("channel %s not found", channel)
-				}
-				rc, ok := ch.(channels.ReactionCapable)
-				if !ok {
-					return fmt.Errorf("channel %s does not support reactions", channel)
-				}
-				_, err := rc.ReactToMessage(ctx, chatID, messageID)
-				return err
-			})
-			agent.Tools.Register(reactionTool)
-		}
 
 		// Send file tool (outbound media via MediaStore — store injected later by SetMediaStore)
 		if cfg.Tools.IsToolEnabled("send_file") {
@@ -248,10 +202,6 @@ func registerSharedTools(
 				allowReadPaths,
 			)
 			agent.Tools.Register(sendFileTool)
-		}
-
-		if ttsProvider != nil {
-			agent.Tools.Register(tools.NewSendTTSTool(ttsProvider, nil))
 		}
 
 		if cfg.Tools.IsToolEnabled("load_image") {

@@ -3,9 +3,7 @@ package tools
 import (
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 
-	"github.com/Northlatch-Labs-LLC/labs/pkg/audio/tts"
 	"github.com/Northlatch-Labs-LLC/labs/pkg/config"
-	"github.com/Northlatch-Labs-LLC/labs/pkg/media"
 	"github.com/Northlatch-Labs-LLC/labs/pkg/skills"
 	integrationtools "github.com/Northlatch-Labs-LLC/labs/pkg/tools/integration"
 )
@@ -19,7 +17,6 @@ type (
 	InstallSkillTool         = integrationtools.InstallSkillTool
 	MessageTool              = integrationtools.MessageTool
 	ReactionTool             = integrationtools.ReactionTool
-	SendTTSTool              = integrationtools.SendTTSTool
 	APIKeyPool               = integrationtools.APIKeyPool
 	APIKeyIterator           = integrationtools.APIKeyIterator
 	SearchProvider           = integrationtools.SearchProvider
@@ -56,10 +53,6 @@ func NewMessageTool() *MessageTool {
 
 func NewReactionTool() *ReactionTool {
 	return integrationtools.NewReactionTool()
-}
-
-func NewSendTTSTool(provider tts.TTSProvider, store media.MediaStore) *SendTTSTool {
-	return integrationtools.NewSendTTSTool(provider, store)
 }
 
 func NewAPIKeyPool(keys []string) *APIKeyPool {

@@ -92,12 +92,6 @@ func (al *AgentLoop) PublishResponseIfNeeded(ctx context.Context, channel, chatI
 }
 
 func (al *AgentLoop) targetReasoningChannelID(channelName string) (chatID string) {
-	if al.channelManager == nil {
-		return ""
-	}
-	if ch, ok := al.channelManager.GetChannel(channelName); ok {
-		return ch.ReasoningChannelID()
-	}
 	return ""
 }
 
