@@ -71,6 +71,30 @@ so: the bell must be rung from a host that has one, over SSH, on the cadence. Wh
 that is the user's open decision; labs does not fake a clock with a resident loop, because a
 resident process is the shape being removed.
 
+## Paying for what it fetches: x402
+
+`pkg/x402` is an `http.RoundTripper`. Put it in any `http.Client` and a 402 is paid on Sui and
+retried with proof; nothing upstream needs to know payments exist.
+
+```go
+client := &http.Client{Transport: &x402.Payer{
+    Wallet: wallet, Gas: gas, Ledger: x402.NewLedger("~/.labs/x402.jsonl"),
+    Network: "sui:mainnet", Ceiling: 20_000_000, PerDay: 200_000_000, // MIST
+}}
+```
+
+Wire format from the x402 v2 spec and its HTTP transport (headers `PAYMENT-REQUIRED`,
+`PAYMENT-SIGNATURE`, `PAYMENT-RESPONSE`, base64 JSON) and the Sui `exact` scheme: the payload is
+a fully signed SplitCoins + TransferObjects transaction the facilitator broadcasts. The coin is
+`0x2::sui::SUI`; amounts are integers in MIST. A 402 above the per-call ceiling or the rolling
+24-hour total is returned to the caller with `Labs-X402-Refused: <reason>` and never paid. Every
+payment and refusal is one line in an append-only ledger with the transaction digest.
+
+Proven offline against `@mysten/sui` 2.30.0: key decode, address, transaction bytes, signature
+and digest are byte-identical to the SDK's. **Unfinished:** the chain-backed `GasSource` (gas
+coin selection and reference gas price over Sui gRPC); pass one ships `StaticGas` only, so
+nothing here has yet paid a real 402. No mainnet SUI has been spent.
+
 ## Licence
 
 MIT, as upstream. See LICENSE.
