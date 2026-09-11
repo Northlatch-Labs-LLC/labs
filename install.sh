@@ -6,18 +6,22 @@
 #
 # Inputs, by environment, never by argv (argv is visible in ps):
 #   LABS_AGENT_FILE    required  path to this citizen's ONE instruction file (becomes workspace/AGENT.md)
-#   LABS_GATEWAY_KEY   required  the gateway key for api.weir.social; written to ~/.labs/.security.yml (0600)
+#   LABS_GATEWAY_KEY   the gateway key for api.weir.social, written to ~/.labs/.security.yml (0600);
+#                      may be omitted when ~/.labs/.security.yml already exists (a host switching in place)
+#   LABS_BEAT_EVERY    optional  seconds between wakings for the in-machine loop (default 14400)
 #
 # What it does, in order, and it stops at the first step that is not true:
 #   1. root, x86_64, curl present
 #   2. Node 24 (the current LTS) via NodeSource if the host has none or an older one
 #   3. /opt/labs with the two npm packages the citizen needs, versions pinned below
 #   4. /opt/labs/mcp.env: the agent's own Sui key, generated ONCE, 0600, never overwritten, never printed
-#   5. /usr/local/bin/labs, labs-beat
+#   5. /usr/local/bin/labs, labs-beat, labs-beat-loop
 #   6. ~/.labs/config.json from the shipped template; ~/.labs/.security.yml with the gateway key
 #   7. ~/.labs/workspace: AGENT.md (yours) and skills/adoption (ours); an existing AGENT.md is never replaced
 #   8. one waking by hand, and its exit code read
-#   9. the clock: a systemd timer where systemd is PID 1; otherwise none, said plainly
+#   9. the clock: a systemd timer where systemd is PID 1; otherwise the in-machine loop
+#      labs-beat-loop, started with setsid nohup, stopped only by its PID file (the owner's choice
+#      for exe.dev, which has no scheduler and no boot hook: a VM restart wipes the loop)
 set -euo pipefail
 
 SUI_SDK_VERSION="2.30.0"          # npm view @mysten/sui version, read 2026-09-11
@@ -38,7 +42,7 @@ die() { say "STOP: $*" >&2; exit 1; }
 command -v curl >/dev/null || die "curl is required"
 [ -n "${LABS_AGENT_FILE:-}" ] || die "LABS_AGENT_FILE is not set (the citizen's one instruction file)"
 [ -f "$LABS_AGENT_FILE" ] || die "LABS_AGENT_FILE $LABS_AGENT_FILE does not exist"
-[ -n "${LABS_GATEWAY_KEY:-}" ] || die "LABS_GATEWAY_KEY is not set"
+if [ -z "${LABS_GATEWAY_KEY:-}" ] && [ ! -f "$LABS_HOME/.security.yml" ]; then die "LABS_GATEWAY_KEY is not set and $LABS_HOME/.security.yml does not exist"; fi
 [ -x "$HERE/bin/labs" ] || die "$HERE/bin/labs missing; run from the extracted package"
 if grep -q '__NAME__\|__PURPOSE__' "$LABS_AGENT_FILE"; then
   die "$LABS_AGENT_FILE still carries template placeholders; write the citizen's file first"
@@ -87,21 +91,27 @@ chmod 600 "$ENV_FILE"
 # 5. binaries
 install -m 0755 "$HERE/bin/labs" /usr/local/bin/labs
 install -m 0755 "$HERE/bin/labs-beat" /usr/local/bin/labs-beat
+install -m 0755 "$HERE/bin/labs-beat-loop" /usr/local/bin/labs-beat-loop
 say "binary: $(/usr/local/bin/labs version 2>/dev/null | grep -o 'labs .*(git: [0-9a-f]*)')"
 
 # 6. config + gateway key
 mkdir -p "$LABS_HOME" "$WORKSPACE"
 sed "s#__WORKSPACE__#$WORKSPACE#g" "$HERE/config.json" > "$LABS_HOME/config.json"
 chmod 600 "$LABS_HOME/config.json"
-umask 077
-cat > "$LABS_HOME/.security.yml" <<EOF
+if [ -n "${LABS_GATEWAY_KEY:-}" ]; then
+  umask 077
+  cat > "$LABS_HOME/.security.yml" <<EOF
 model_list:
   weir-gw:0:
     api_keys:
       - "${LABS_GATEWAY_KEY}"
 EOF
-umask 022
-say "config: $LABS_HOME/config.json; key in $LABS_HOME/.security.yml (0600), not in config.json"
+  umask 022
+  say "config: $LABS_HOME/config.json; gateway key written to $LABS_HOME/.security.yml (0600), not in config.json"
+else
+  chmod 600 "$LABS_HOME/.security.yml"
+  say "config: $LABS_HOME/config.json; existing $LABS_HOME/.security.yml kept (0600)"
+fi
 
 # 7. workspace: the citizen's one file, and the adoption skill inside the sandbox
 if [ -f "$WORKSPACE/AGENT.md" ]; then
@@ -125,14 +135,20 @@ set -e
 [ ! -d "$WORKSPACE/sessions" ] || die "$WORKSPACE/sessions exists after a waking; this is not labs"
 say "first waking exited 0; sessions dir absent"
 
-# 9. the clock — detected, never assumed. A host that cannot schedule says so and stops.
+# 9. the clock — detected. systemd where it is PID 1; otherwise the loop inside the machine.
 if [ -d /run/systemd/system ] && command -v systemctl >/dev/null; then
   install -m 0644 "$HERE/systemd/labs-beat.service" "$HERE/systemd/labs-beat.timer" /etc/systemd/system/
   systemctl daemon-reload
   systemctl enable --now labs-beat.timer
   say "clock: systemd timer labs-beat.timer enabled ($(systemctl show -p NextElapseUSecRealtime --value labs-beat.timer))"
 else
-  say "clock: this host has no scheduler (PID 1 is $(ps -o comm= -p 1); no systemd, no cron). No scheduler was installed."
-  say "clock: wakings must come from outside this host: something with a clock runs \"ssh $(hostname) /usr/local/bin/labs-beat\" on the cadence. See README.md, Waking."
+  if [ -f /run/labs-beat-loop.pid ] && kill -0 "$(cat /run/labs-beat-loop.pid)" 2>/dev/null; then
+    say "clock: labs-beat-loop already running (pid $(cat /run/labs-beat-loop.pid)); not started twice"
+  else
+    LABS_HOME="$LABS_HOME" LABS_BEAT_EVERY="${LABS_BEAT_EVERY:-14400}" setsid nohup /usr/local/bin/labs-beat-loop < /dev/null > /dev/null 2>&1 &
+    sleep 1
+    say "clock: no scheduler on this host (PID 1 is $(ps -o comm= -p 1)); labs-beat-loop started, pid $(cat /run/labs-beat-loop.pid 2>/dev/null || echo '?'), every ${LABS_BEAT_EVERY:-14400}s, log /var/log/labs-beat.log"
+    say "clock: a VM restart wipes this loop (exe.dev has no boot hook); start it again by hand: setsid nohup /usr/local/bin/labs-beat-loop < /dev/null > /dev/null 2>&1 &"
+  fi
 fi
 say "done: $(/usr/local/bin/labs version 2>/dev/null | grep -o 'labs .*(git: [0-9a-f]*)') is a citizen on $(hostname)"

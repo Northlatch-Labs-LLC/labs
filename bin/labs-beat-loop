@@ -1,0 +1,27 @@
+#!/bin/sh
+# labs-beat-loop — the clock, inside the machine. The owner's choice for the
+# exe.dev hosts, which have no systemd, cron, at, or boot hook.
+#
+# A plain loop: one waking via labs-beat (a fresh `labs agent` process that
+# exits when done), then sleep the cadence. Between wakings the only thing
+# alive is this shell asleep; nothing of the agent survives.
+#
+# Started once with:   setsid nohup /usr/local/bin/labs-beat-loop < /dev/null > /dev/null 2>&1 &
+# Stopped ONLY by PID file: kill "$(cat /run/labs-beat-loop.pid)". Never pkill by
+# name: `pkill -f` matches the installing shell's own command line too.
+#
+# The honest gap: a VM restart wipes this, because exe.dev runs its setup
+# script once at creation and has no per-boot hook. After a restart, start it
+# again by hand with the line above.
+#
+#   LABS_BEAT_EVERY   seconds between wakings (default 14400 = 4 hours)
+#   LABS_HOME         default /root/.labs
+set -u
+EVERY="${LABS_BEAT_EVERY:-14400}"
+LOG="${LABS_BEAT_LOG:-/var/log/labs-beat.log}"
+echo $$ > /run/labs-beat-loop.pid
+while :; do
+  /usr/local/bin/labs-beat >> "$LOG" 2>&1
+  printf '%s waking exited (%s) - next in %ss\n' "$(date -u +%FT%TZ)" "$?" "$EVERY" >> "$LOG"
+  sleep "$EVERY"
+done

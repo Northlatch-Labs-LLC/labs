@@ -77,3 +77,4 @@ docker/data
 
 # labs ships its wake script; the ignore above is upstream's for build output
 !bin/labs-beat
+!bin/labs-beat-loop

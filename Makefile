@@ -49,7 +49,7 @@ build-linux:
 package: build-linux
 	@rm -rf $(BUILD_DIR)/pkg && mkdir -p $(BUILD_DIR)/pkg/bin
 	@cp $(BUILD_DIR)/$(BINARY_NAME)-linux-amd64 $(BUILD_DIR)/pkg/bin/labs
-	@cp bin/labs-beat $(BUILD_DIR)/pkg/bin/
+	@cp bin/labs-beat bin/labs-beat-loop $(BUILD_DIR)/pkg/bin/
 	@cp -R config.json workspace systemd install.sh README.md LICENSE $(BUILD_DIR)/pkg/
 	@chmod +x $(BUILD_DIR)/pkg/bin/* $(BUILD_DIR)/pkg/install.sh
 	@tar -C $(BUILD_DIR)/pkg -czf $(BUILD_DIR)/$(BINARY_NAME)-$(VERSION)-linux-amd64.tar.gz .
