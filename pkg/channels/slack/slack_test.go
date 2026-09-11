@@ -8,10 +8,10 @@ import (
 
 	slacksdk "github.com/slack-go/slack"
 
-	"github.com/sipeed/picoclaw/pkg/bus"
-	"github.com/sipeed/picoclaw/pkg/channels"
-	"github.com/sipeed/picoclaw/pkg/config"
-	"github.com/sipeed/picoclaw/pkg/media"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/bus"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/channels"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/config"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/media"
 )
 
 func TestParseSlackChatID(t *testing.T) {

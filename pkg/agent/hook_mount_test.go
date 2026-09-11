@@ -7,8 +7,8 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/sipeed/picoclaw/pkg/bus"
-	"github.com/sipeed/picoclaw/pkg/config"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/bus"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/config"
 )
 
 type builtinAutoHookConfig struct {
@@ -130,9 +130,9 @@ func TestAgentLoop_ProcessDirectWithChannel_AutoMountsProcessHook(t *testing.T) 
 				Enabled: true,
 				Command: processHookHelperCommand(),
 				Env: map[string]string{
-					"PICOCLAW_HOOK_HELPER":    "1",
-					"PICOCLAW_HOOK_MODE":      "rewrite",
-					"PICOCLAW_HOOK_EVENT_LOG": eventLog,
+					"LABS_HOOK_HELPER":    "1",
+					"LABS_HOOK_MODE":      "rewrite",
+					"LABS_HOOK_EVENT_LOG": eventLog,
 				},
 				Observe:   []string{"turn_end"},
 				Intercept: []string{"before_llm", "after_llm"},

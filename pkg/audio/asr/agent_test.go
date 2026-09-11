@@ -10,7 +10,7 @@ import (
 
 	"github.com/pion/webrtc/v3/pkg/media/oggwriter"
 
-	"github.com/sipeed/picoclaw/pkg/bus"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/bus"
 )
 
 type fakeTranscriber struct {

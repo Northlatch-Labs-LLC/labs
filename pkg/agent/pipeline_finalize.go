@@ -1,13 +1,13 @@
-// PicoClaw - Ultra-lightweight personal AI agent
+// Labs - Ultra-lightweight personal AI agent
 
 package agent
 
 import (
 	"context"
 
-	"github.com/sipeed/picoclaw/pkg/bus"
-	runtimeevents "github.com/sipeed/picoclaw/pkg/events"
-	"github.com/sipeed/picoclaw/pkg/providers"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/bus"
+	runtimeevents "github.com/Northlatch-Labs-LLC/labs/pkg/events"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/providers"
 )
 
 // Finalize handles turn finalization, either:

@@ -6,8 +6,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/sipeed/picoclaw/pkg/config"
-	"github.com/sipeed/picoclaw/pkg/skills"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/config"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/skills"
 )
 
 type SkillsRecaller struct {

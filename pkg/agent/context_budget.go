@@ -1,13 +1,13 @@
-// PicoClaw - Ultra-lightweight personal AI agent
+// Labs - Ultra-lightweight personal AI agent
 // License: MIT
 //
-// Copyright (c) 2026 PicoClaw contributors
+// Copyright (c) 2026 Labs contributors
 
 package agent
 
 import (
-	"github.com/sipeed/picoclaw/pkg/providers"
-	"github.com/sipeed/picoclaw/pkg/tokenizer"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/providers"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/tokenizer"
 )
 
 // parseTurnBoundaries returns the starting index of each Turn in the history.

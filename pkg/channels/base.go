@@ -11,11 +11,11 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/sipeed/picoclaw/pkg/bus"
-	"github.com/sipeed/picoclaw/pkg/config"
-	"github.com/sipeed/picoclaw/pkg/identity"
-	"github.com/sipeed/picoclaw/pkg/logger"
-	"github.com/sipeed/picoclaw/pkg/media"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/bus"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/config"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/identity"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/logger"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/media"
 )
 
 var (
@@ -124,7 +124,7 @@ func NewBaseChannel(
 	}
 
 	// Security Audit: Check for open-by-default (unsecured) channels.
-	// PicoClaw aims to be secure-by-default. If allow_from is empty, the bot
+	// Labs aims to be secure-by-default. If allow_from is empty, the bot
 	// currently defaults to accepting messages from ANYONE. To explicitly
 	// acknowledge and permit this (e.g. for a public bot), use ["*"].
 	if len(bc.allowList) == 0 {

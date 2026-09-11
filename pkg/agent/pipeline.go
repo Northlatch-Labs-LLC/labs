@@ -1,12 +1,12 @@
-// PicoClaw - Ultra-lightweight personal AI agent
+// Labs - Ultra-lightweight personal AI agent
 
 package agent
 
 import (
-	"github.com/sipeed/picoclaw/pkg/agent/interfaces"
-	"github.com/sipeed/picoclaw/pkg/config"
-	"github.com/sipeed/picoclaw/pkg/media"
-	"github.com/sipeed/picoclaw/pkg/providers"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/agent/interfaces"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/config"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/media"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/providers"
 )
 
 // Pipeline holds the runtime dependencies used by Pipeline methods.

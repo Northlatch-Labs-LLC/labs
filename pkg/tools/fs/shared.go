@@ -3,7 +3,7 @@ package fstools
 import (
 	"context"
 
-	toolshared "github.com/sipeed/picoclaw/pkg/tools/shared"
+	toolshared "github.com/Northlatch-Labs-LLC/labs/pkg/tools/shared"
 )
 
 type ToolResult = toolshared.ToolResult

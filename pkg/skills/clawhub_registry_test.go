@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/sipeed/picoclaw/pkg/utils"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/utils"
 )
 
 func newTestRegistry(serverURL, authToken string) *ClawHubRegistry {

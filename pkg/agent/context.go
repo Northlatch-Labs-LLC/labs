@@ -14,11 +14,11 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/sipeed/picoclaw/pkg/config"
-	"github.com/sipeed/picoclaw/pkg/logger"
-	"github.com/sipeed/picoclaw/pkg/providers"
-	"github.com/sipeed/picoclaw/pkg/skills"
-	"github.com/sipeed/picoclaw/pkg/utils"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/config"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/logger"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/providers"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/skills"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/utils"
 )
 
 type ContextBuilder struct {
@@ -174,9 +174,9 @@ func (cb *ContextBuilder) getIdentity(includeToolUseRule bool) string {
 	}
 
 	return fmt.Sprintf(
-		`# picoclaw 🦞 (%s)
+		`# labs (%s)
 
-You are picoclaw, a helpful AI assistant.
+You are an agent running on labs, the Northlatch Labs harness. Your runtime is exactly "labs %s"; when a statement or a register asks for your model, report that string and nothing else.
 
 ## Workspace
 Your workspace is at: %s
@@ -188,6 +188,7 @@ Your workspace is at: %s
 
 %s
 `,
+		version,
 		version,
 		workspacePath,
 		workspacePath,
@@ -254,7 +255,7 @@ func (cb *ContextBuilder) buildSystemPromptParts(opts systemPromptBuildOptions) 
 		Layer:   PromptLayerKernel,
 		Slot:    PromptSlotIdentity,
 		Source:  PromptSource{ID: PromptSourceKernel, Name: "identity"},
-		Title:   "picoclaw identity",
+		Title:   "labs identity",
 		Content: cb.getIdentity(opts.IncludeToolUseRule),
 		Stable:  true,
 		Cache:   PromptCacheEphemeral,
@@ -846,7 +847,7 @@ func (cb *ContextBuilder) BuildMessagesFromPrompt(req PromptBuildRequest) []prov
 	// locally to avoid repeated file I/O and string building on every call
 	// (fixes issue #607). Profile-customized static prompts are built on demand.
 	// Dynamic parts (time, session, summary) are appended per request unless the
-	// profile suppresses PicoClaw system context.
+	// profile suppresses Labs system context.
 	// Everything is sent as a single system message for provider compatibility:
 	// - Anthropic adapter extracts messages[0] (Role=="system") and maps its content
 	//   to the top-level "system" parameter in the Messages API request. A single

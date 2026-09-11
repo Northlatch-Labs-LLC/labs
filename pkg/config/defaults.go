@@ -1,7 +1,7 @@
-// PicoClaw - Ultra-lightweight personal AI agent
+// Labs - Ultra-lightweight personal AI agent
 // License: MIT
 //
-// Copyright (c) 2026 PicoClaw contributors
+// Copyright (c) 2026 Labs contributors
 
 package config
 
@@ -9,10 +9,10 @@ import (
 	"encoding/json"
 	"path/filepath"
 
-	"github.com/sipeed/picoclaw/pkg"
+	"github.com/Northlatch-Labs-LLC/labs/pkg"
 )
 
-// DefaultConfig returns the default configuration for PicoClaw.
+// DefaultConfig returns the default configuration for Labs.
 func DefaultConfig() *Config {
 	workspacePath := filepath.Join(GetHome(), pkg.WorkspaceName)
 
@@ -588,7 +588,7 @@ func defaultChannels() ChannelsConfig {
 			"settings": map[string]any{
 				"server":   "",
 				"tls":      true,
-				"nick":     "picoclaw",
+				"nick":     "labs",
 				"channels": []string{},
 			},
 		},

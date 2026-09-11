@@ -11,10 +11,10 @@ import (
 	"strings"
 	"time"
 
-	basechannels "github.com/sipeed/picoclaw/pkg/channels"
-	"github.com/sipeed/picoclaw/pkg/config"
-	"github.com/sipeed/picoclaw/pkg/fileutil"
-	"github.com/sipeed/picoclaw/pkg/logger"
+	basechannels "github.com/Northlatch-Labs-LLC/labs/pkg/channels"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/config"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/fileutil"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/logger"
 )
 
 const (
@@ -40,7 +40,7 @@ type contextTokensFile struct {
 	Tokens map[string]string `json:"tokens"`
 }
 
-func picoclawHomeDir() string {
+func labsHomeDir() string {
 	return config.GetHome()
 }
 
@@ -54,11 +54,11 @@ func genWeixinAccountKey(cfg *config.WeixinSettings) string {
 }
 
 func buildWeixinSyncBufPath(cfg *config.WeixinSettings) string {
-	return filepath.Join(picoclawHomeDir(), "channels", "weixin", "sync", genWeixinAccountKey(cfg)+".json")
+	return filepath.Join(labsHomeDir(), "channels", "weixin", "sync", genWeixinAccountKey(cfg)+".json")
 }
 
 func buildWeixinContextTokensPath(cfg *config.WeixinSettings) string {
-	return filepath.Join(picoclawHomeDir(), "channels", "weixin", "context-tokens", genWeixinAccountKey(cfg)+".json")
+	return filepath.Join(labsHomeDir(), "channels", "weixin", "context-tokens", genWeixinAccountKey(cfg)+".json")
 }
 
 func loadGetUpdatesBuf(path string) (string, error) {

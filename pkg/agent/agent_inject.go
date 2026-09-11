@@ -1,13 +1,13 @@
-// PicoClaw - Ultra-lightweight personal AI agent
+// Labs - Ultra-lightweight personal AI agent
 
 package agent
 
 import (
-	"github.com/sipeed/picoclaw/pkg/audio/asr"
-	"github.com/sipeed/picoclaw/pkg/channels"
-	"github.com/sipeed/picoclaw/pkg/config"
-	"github.com/sipeed/picoclaw/pkg/media"
-	"github.com/sipeed/picoclaw/pkg/tools"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/audio/asr"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/channels"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/config"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/media"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/tools"
 )
 
 func (al *AgentLoop) RegisterTool(tool tools.Tool) {

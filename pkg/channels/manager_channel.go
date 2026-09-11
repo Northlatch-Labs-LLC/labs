@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"log"
 
-	"github.com/sipeed/picoclaw/pkg/config"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/config"
 )
 
 func toChannelHashes(cfg *config.Config) map[string]string {

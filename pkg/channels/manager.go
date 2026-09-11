@@ -1,8 +1,8 @@
-// PicoClaw - Ultra-lightweight personal AI agent
+// Labs - Ultra-lightweight personal AI agent
 // Inspired by and based on nanobot: https://github.com/HKUDS/nanobot
 // License: MIT
 //
-// Copyright (c) 2026 PicoClaw contributors
+// Copyright (c) 2026 Labs contributors
 
 package channels
 
@@ -21,14 +21,14 @@ import (
 
 	"golang.org/x/time/rate"
 
-	"github.com/sipeed/picoclaw/pkg/bus"
-	"github.com/sipeed/picoclaw/pkg/config"
-	"github.com/sipeed/picoclaw/pkg/constants"
-	runtimeevents "github.com/sipeed/picoclaw/pkg/events"
-	"github.com/sipeed/picoclaw/pkg/health"
-	"github.com/sipeed/picoclaw/pkg/logger"
-	"github.com/sipeed/picoclaw/pkg/media"
-	"github.com/sipeed/picoclaw/pkg/utils"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/bus"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/config"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/constants"
+	runtimeevents "github.com/Northlatch-Labs-LLC/labs/pkg/events"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/health"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/logger"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/media"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/utils"
 )
 
 const (

@@ -3,8 +3,8 @@ package providers
 import (
 	"testing"
 
-	"github.com/sipeed/picoclaw/pkg/auth"
-	"github.com/sipeed/picoclaw/pkg/config"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/auth"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/config"
 )
 
 func TestCreateProviderReturnsHTTPProviderForOpenRouter(t *testing.T) {

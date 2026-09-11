@@ -12,10 +12,10 @@ import (
 	"sync/atomic"
 	"time"
 
-	runtimeevents "github.com/sipeed/picoclaw/pkg/events"
-	"github.com/sipeed/picoclaw/pkg/isolation"
-	"github.com/sipeed/picoclaw/pkg/logger"
-	"github.com/sipeed/picoclaw/pkg/tools"
+	runtimeevents "github.com/Northlatch-Labs-LLC/labs/pkg/events"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/isolation"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/logger"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/tools"
 )
 
 const (

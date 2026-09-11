@@ -13,9 +13,9 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 
-	"github.com/sipeed/picoclaw/pkg/audio/tts"
-	"github.com/sipeed/picoclaw/pkg/bus"
-	"github.com/sipeed/picoclaw/pkg/channels"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/audio/tts"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/bus"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/channels"
 )
 
 type stubTTSProvider struct{}

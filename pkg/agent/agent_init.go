@@ -1,4 +1,4 @@
-// PicoClaw - Ultra-lightweight personal AI agent
+// Labs - Ultra-lightweight personal AI agent
 
 package agent
 
@@ -8,18 +8,18 @@ import (
 	"sync"
 	"time"
 
-	"github.com/sipeed/picoclaw/pkg/agent/interfaces"
-	"github.com/sipeed/picoclaw/pkg/audio/tts"
-	"github.com/sipeed/picoclaw/pkg/bus"
-	"github.com/sipeed/picoclaw/pkg/channels"
-	"github.com/sipeed/picoclaw/pkg/commands"
-	"github.com/sipeed/picoclaw/pkg/config"
-	runtimeevents "github.com/sipeed/picoclaw/pkg/events"
-	"github.com/sipeed/picoclaw/pkg/logger"
-	"github.com/sipeed/picoclaw/pkg/providers"
-	"github.com/sipeed/picoclaw/pkg/skills"
-	"github.com/sipeed/picoclaw/pkg/state"
-	"github.com/sipeed/picoclaw/pkg/tools"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/agent/interfaces"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/audio/tts"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/bus"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/channels"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/commands"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/config"
+	runtimeevents "github.com/Northlatch-Labs-LLC/labs/pkg/events"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/logger"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/providers"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/skills"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/state"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/tools"
 )
 
 func NewAgentLoop(

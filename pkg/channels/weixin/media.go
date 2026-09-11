@@ -24,10 +24,10 @@ import (
 	"github.com/google/uuid"
 	"github.com/h2non/filetype"
 
-	"github.com/sipeed/picoclaw/pkg/bus"
-	basechannels "github.com/sipeed/picoclaw/pkg/channels"
-	"github.com/sipeed/picoclaw/pkg/logger"
-	"github.com/sipeed/picoclaw/pkg/media"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/bus"
+	basechannels "github.com/Northlatch-Labs-LLC/labs/pkg/channels"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/logger"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/media"
 )
 
 const (
@@ -913,7 +913,7 @@ func (c *WeixinChannel) sendMessageItem(
 	resp, err := c.api.SendMessage(ctx, SendMessageReq{
 		Msg: WeixinMessage{
 			ToUserID:     toUserID,
-			ClientID:     "picoclaw-" + uuid.New().String(),
+			ClientID:     "labs-" + uuid.New().String(),
 			MessageType:  MessageTypeBot,
 			MessageState: MessageStateFinish,
 			ItemList:     []MessageItem{item},

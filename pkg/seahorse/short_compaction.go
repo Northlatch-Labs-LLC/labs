@@ -6,9 +6,9 @@ import (
 	"sort"
 	"time"
 
-	"github.com/sipeed/picoclaw/pkg/logger"
-	"github.com/sipeed/picoclaw/pkg/providers"
-	"github.com/sipeed/picoclaw/pkg/tokenizer"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/logger"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/providers"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/tokenizer"
 )
 
 // CompactInput controls compaction behavior.

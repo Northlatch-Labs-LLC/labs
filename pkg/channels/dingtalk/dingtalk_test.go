@@ -7,8 +7,8 @@ import (
 
 	"github.com/open-dingtalk/dingtalk-stream-sdk-go/chatbot"
 
-	"github.com/sipeed/picoclaw/pkg/bus"
-	"github.com/sipeed/picoclaw/pkg/config"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/bus"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/config"
 )
 
 func newTestDingTalkChannel(

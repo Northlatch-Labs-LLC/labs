@@ -1,4 +1,4 @@
-module github.com/sipeed/picoclaw
+module github.com/Northlatch-Labs-LLC/labs
 
 go 1.25.11
 

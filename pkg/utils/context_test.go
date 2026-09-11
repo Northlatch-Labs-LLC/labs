@@ -1,14 +1,14 @@
-// PicoClaw - Ultra-lightweight personal AI agent
+// Labs - Ultra-lightweight personal AI agent
 // License: MIT
 //
-// Copyright (c) 2026 PicoClaw contributors
+// Copyright (c) 2026 Labs contributors
 
 package utils
 
 import (
 	"testing"
 
-	"github.com/sipeed/picoclaw/pkg/providers"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/providers"
 )
 
 func TestCalculateDefaultMaxContextRunes(t *testing.T) {

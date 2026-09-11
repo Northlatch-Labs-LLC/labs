@@ -3,7 +3,7 @@ package memory
 import (
 	"context"
 
-	"github.com/sipeed/picoclaw/pkg/providers"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/providers"
 )
 
 // Store defines an interface for persistent session storage.

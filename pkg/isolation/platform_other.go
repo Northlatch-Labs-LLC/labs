@@ -5,7 +5,7 @@ package isolation
 import (
 	"os/exec"
 
-	"github.com/sipeed/picoclaw/pkg/config"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/config"
 )
 
 func applyPlatformIsolation(cmd *exec.Cmd, isolation config.IsolationConfig, root string) error {

@@ -10,7 +10,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/sipeed/picoclaw/pkg/seahorse"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/seahorse"
 )
 
 // EvalResult holds per-sample evaluation results for one mode.

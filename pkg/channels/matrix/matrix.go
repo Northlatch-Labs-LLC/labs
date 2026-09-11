@@ -25,12 +25,12 @@ import (
 	"maunium.net/go/mautrix/id"
 	_ "modernc.org/sqlite"
 
-	"github.com/sipeed/picoclaw/pkg/bus"
-	"github.com/sipeed/picoclaw/pkg/channels"
-	"github.com/sipeed/picoclaw/pkg/config"
-	"github.com/sipeed/picoclaw/pkg/identity"
-	"github.com/sipeed/picoclaw/pkg/logger"
-	"github.com/sipeed/picoclaw/pkg/media"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/bus"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/channels"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/config"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/identity"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/logger"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/media"
 )
 
 const (
@@ -1409,8 +1409,8 @@ func localpartMentionRegexp(localpart string) *regexp.Regexp {
 	}
 
 	// Match Matrix mentions in plain text while avoiding false positives:
-	//   "@picoclaw" and "@picoclaw:matrix.org" should match,
-	//   "test@example.com" and "hellopicoclawworld" should not.
+	//   "@labs" and "@labs:matrix.org" should match,
+	//   "test@example.com" and "hellolabsworld" should not.
 	pattern := `(?i)(^|[^[:alnum:]_])@` + regexp.QuoteMeta(localpart) + `(?::[A-Za-z0-9._:-]+)?([^[:alnum:]_]|$)`
 	return regexp.MustCompile(pattern)
 }

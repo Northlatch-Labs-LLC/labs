@@ -13,8 +13,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sipeed/picoclaw/pkg/fileutil"
-	"github.com/sipeed/picoclaw/pkg/utils"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/fileutil"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/utils"
 )
 
 // GitHubContent represents a file or directory in GitHub API response

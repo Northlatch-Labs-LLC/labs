@@ -1,12 +1,12 @@
-// PicoClaw - Ultra-lightweight personal AI agent
+// Labs - Ultra-lightweight personal AI agent
 
 package adapters
 
 import (
 	"context"
 
-	"github.com/sipeed/picoclaw/pkg/agent/interfaces"
-	"github.com/sipeed/picoclaw/pkg/bus"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/agent/interfaces"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/bus"
 )
 
 // messageBusAdapter wraps *bus.MessageBus to implement interfaces.MessageBus.

@@ -8,7 +8,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/sipeed/picoclaw/pkg/config"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/config"
 )
 
 func TestWhisperTranscriberTranscribeDataUsesConfiguredModel(t *testing.T) {

@@ -8,10 +8,10 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 
-	"github.com/sipeed/picoclaw/pkg/audio"
-	"github.com/sipeed/picoclaw/pkg/bus"
-	"github.com/sipeed/picoclaw/pkg/identity"
-	"github.com/sipeed/picoclaw/pkg/logger"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/audio"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/bus"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/identity"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/logger"
 )
 
 func (c *DiscordChannel) setVoiceUserID(guildID string, ssrc uint32, userID string) {

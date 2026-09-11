@@ -3,7 +3,7 @@ package common
 import (
 	"testing"
 
-	"github.com/sipeed/picoclaw/pkg/providers/protocoltypes"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/providers/protocoltypes"
 )
 
 func TestNormalizeStoredToolCall_TopLevelFields(t *testing.T) {

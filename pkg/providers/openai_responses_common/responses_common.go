@@ -10,8 +10,8 @@ import (
 	"github.com/openai/openai-go/v3"
 	"github.com/openai/openai-go/v3/responses"
 
-	"github.com/sipeed/picoclaw/pkg/providers/common"
-	"github.com/sipeed/picoclaw/pkg/providers/protocoltypes"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/providers/common"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/providers/protocoltypes"
 )
 
 // TranslateMessages converts internal Message entries to the OpenAI Responses API

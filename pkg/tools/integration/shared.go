@@ -3,8 +3,8 @@ package integrationtools
 import (
 	"context"
 
-	"github.com/sipeed/picoclaw/pkg/session"
-	toolshared "github.com/sipeed/picoclaw/pkg/tools/shared"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/session"
+	toolshared "github.com/Northlatch-Labs-LLC/labs/pkg/tools/shared"
 )
 
 type (

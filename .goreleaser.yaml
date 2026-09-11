@@ -15,7 +15,7 @@ before:
     - sh -c 'if [ "${INCLUDE_ANDROID_BUNDLE:-}" = "true" ]; then make build-android-bundle; fi'
 
 builds:
-  - id: picoclaw
+  - id: labs
     env:
       - CGO_ENABLED=0
     tags:
@@ -23,10 +23,10 @@ builds:
       - stdjson
     ldflags:
       - -s -w
-      - -X github.com/sipeed/picoclaw/pkg/config.Version={{ .Version }}
-      - -X github.com/sipeed/picoclaw/pkg/config.GitCommit={{ .ShortCommit }}
-      - -X github.com/sipeed/picoclaw/pkg/config.BuildTime={{ .Date }}
-      - -X github.com/sipeed/picoclaw/pkg/config.GoVersion={{ with index .Env "GOVERSION" }}{{ . }}{{ else }}unknown{{ end }}
+      - -X github.com/Northlatch-Labs-LLC/labs/pkg/config.Version={{ .Version }}
+      - -X github.com/Northlatch-Labs-LLC/labs/pkg/config.GitCommit={{ .ShortCommit }}
+      - -X github.com/Northlatch-Labs-LLC/labs/pkg/config.BuildTime={{ .Date }}
+      - -X github.com/Northlatch-Labs-LLC/labs/pkg/config.GoVersion={{ with index .Env "GOVERSION" }}{{ . }}{{ else }}unknown{{ end }}
     goos:
       - linux
       - windows
@@ -46,7 +46,7 @@ builds:
       - "7"
     gomips:
       - softfloat
-    main: ./cmd/picoclaw
+    main: ./cmd/labs
     ignore:
       - goos: windows
         goarch: arm
@@ -57,7 +57,7 @@ builds:
       - goos: netbsd
         goarch: arm
 
-  - id: picoclaw-launcher
+  - id: labs-launcher
     binary: picoclaw-launcher
     env:
       - CGO_ENABLED=0
@@ -66,10 +66,10 @@ builds:
       - stdjson
     ldflags:
       - -s -w
-      - -X github.com/sipeed/picoclaw/pkg/config.Version={{ .Version }}
-      - -X github.com/sipeed/picoclaw/pkg/config.GitCommit={{ .ShortCommit }}
-      - -X github.com/sipeed/picoclaw/pkg/config.BuildTime={{ .Date }}
-      - -X github.com/sipeed/picoclaw/pkg/config.GoVersion={{ with index .Env "GOVERSION" }}{{ . }}{{ else }}unknown{{ end }}
+      - -X github.com/Northlatch-Labs-LLC/labs/pkg/config.Version={{ .Version }}
+      - -X github.com/Northlatch-Labs-LLC/labs/pkg/config.GitCommit={{ .ShortCommit }}
+      - -X github.com/Northlatch-Labs-LLC/labs/pkg/config.BuildTime={{ .Date }}
+      - -X github.com/Northlatch-Labs-LLC/labs/pkg/config.GoVersion={{ with index .Env "GOVERSION" }}{{ . }}{{ else }}unknown{{ end }}
     goos:
       - linux
       - windows
@@ -101,7 +101,7 @@ builds:
         goarch: arm
 
 dockers_v2:
-  - id: picoclaw
+  - id: labs
     dockerfile: docker/Dockerfile.goreleaser
     extra_files:
       - docker/entrypoint.sh
@@ -118,7 +118,7 @@ dockers_v2:
       - linux/arm64
       - linux/riscv64
 
-  - id: picoclaw-launcher
+  - id: labs-launcher
     dockerfile: docker/Dockerfile.goreleaser.launcher
     ids:
       - picoclaw
@@ -166,7 +166,7 @@ archives:
         formats: [zip]
 
 nfpms:
-  - id: picoclaw
+  - id: labs
     ids:
       - picoclaw
       - picoclaw-launcher

@@ -4,8 +4,8 @@ import (
 	"context"
 	"strings"
 
-	"github.com/sipeed/picoclaw/pkg/config"
-	"github.com/sipeed/picoclaw/pkg/providers"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/config"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/providers"
 )
 
 const elevenLabsSupportedModelID = "scribe_v1"

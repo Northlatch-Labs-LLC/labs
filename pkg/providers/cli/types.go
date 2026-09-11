@@ -3,7 +3,7 @@ package cliprovider
 import (
 	"context"
 
-	"github.com/sipeed/picoclaw/pkg/providers/protocoltypes"
+	"github.com/Northlatch-Labs-LLC/labs/pkg/providers/protocoltypes"
 )
 
 type (
