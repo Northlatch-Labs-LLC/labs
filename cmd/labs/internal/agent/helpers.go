@@ -18,10 +18,11 @@ import (
 	"github.com/Northlatch-Labs-LLC/labs/pkg/providers"
 )
 
-func agentCmd(message, sessionKey, model string, debug bool) error {
-	if sessionKey == "" {
-		sessionKey = "cli:default"
-	}
+// wakingSessionKey names the one session a labs process ever has. It is never written to disk.
+const wakingSessionKey = "waking"
+
+func agentCmd(message, model string, debug bool) error {
+	sessionKey := wakingSessionKey
 
 	cfg, err := internal.LoadConfig()
 	if err != nil {

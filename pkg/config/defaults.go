@@ -43,9 +43,6 @@ func DefaultConfig() *Config {
 				LLMRetryBackoffSecs: 2,
 			},
 		},
-		Session: SessionConfig{
-			Dimensions: []string{"chat"},
-		},
 		Hooks: HooksConfig{
 			Enabled: true,
 			Defaults: HookDefaultsConfig{

@@ -1,7 +1,6 @@
 package agent
 
 import (
-	"context"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -11,7 +10,6 @@ import (
 	"github.com/Northlatch-Labs-LLC/labs/pkg/isolation"
 	"github.com/Northlatch-Labs-LLC/labs/pkg/logger"
 	"github.com/Northlatch-Labs-LLC/labs/pkg/media"
-	"github.com/Northlatch-Labs-LLC/labs/pkg/memory"
 	"github.com/Northlatch-Labs-LLC/labs/pkg/providers"
 	"github.com/Northlatch-Labs-LLC/labs/pkg/routing"
 	"github.com/Northlatch-Labs-LLC/labs/pkg/session"
@@ -126,8 +124,8 @@ func NewAgentInstance(
 		toolsRegistry.Register(tools.NewAppendFileTool(workspace, restrict, allowWritePaths))
 	}
 
-	sessionsDir := filepath.Join(workspace, "sessions")
-	sessions := initSessionStore(sessionsDir)
+	// One waking, one memory: the store lives in this process and dies with it.
+	sessions := session.NewEphemeralStore()
 
 	mcpDiscoveryActive := agentHasDiscoverableMCPServers(cfg, agentMCPServerAllowlist)
 	contextBuilder := NewContextBuilder(workspace).
@@ -464,33 +462,6 @@ func (a *AgentInstance) Close() error {
 		return a.Sessions.Close()
 	}
 	return nil
-}
-
-// initSessionStore creates the session persistence backend.
-// It uses the JSONL store by default and auto-migrates legacy JSON sessions.
-// Falls back to SessionManager if the JSONL store cannot be initialized or
-// if migration fails (which indicates the store cannot write reliably).
-func initSessionStore(dir string) session.SessionStore {
-	store, err := memory.NewJSONLStore(dir)
-	if err != nil {
-		logger.WarnCF("agent", "Memory JSONL store init failed; falling back to json sessions",
-			map[string]any{"error": err.Error()})
-		return session.NewSessionManager(dir)
-	}
-
-	if n, merr := memory.MigrateFromJSON(context.Background(), dir, store); merr != nil {
-		// Migration failure means the store could not write data.
-		// Fall back to SessionManager to avoid a split state where
-		// some sessions are in JSONL and others remain in JSON.
-		logger.WarnCF("agent", "Memory migration failed; falling back to json sessions",
-			map[string]any{"error": merr.Error()})
-		store.Close()
-		return session.NewSessionManager(dir)
-	} else if n > 0 {
-		logger.InfoCF("agent", "Memory migrated to JSONL", map[string]any{"sessions_migrated": n})
-	}
-
-	return session.NewJSONLBackend(store)
 }
 
 func expandHome(path string) string {

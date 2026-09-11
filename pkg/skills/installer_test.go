@@ -25,16 +25,16 @@ func TestParseGitHubRef(t *testing.T) {
 	}{
 		{
 			name:         "simple owner/repo",
-			repo:         "sipeed/labs",
-			wantOwner:    "sipeed",
+			repo:         "Northlatch-Labs-LLC/labs",
+			wantOwner:    "Northlatch-Labs-LLC",
 			wantRepoName: "labs",
 			wantRef:      "main",
 			wantSubPath:  "",
 		},
 		{
 			name:         "owner/repo with subpath",
-			repo:         "sipeed/labs/skills/test",
-			wantOwner:    "sipeed",
+			repo:         "Northlatch-Labs-LLC/labs/skills/test",
+			wantOwner:    "Northlatch-Labs-LLC",
 			wantRepoName: "labs",
 			wantRef:      "main",
 			wantSubPath:  "skills/test",
@@ -42,7 +42,7 @@ func TestParseGitHubRef(t *testing.T) {
 		{
 			name:         "full URL with tree",
 			repo:         "https://github.com/Northlatch-Labs-LLC/labs/tree/dev/skills/test",
-			wantOwner:    "sipeed",
+			wantOwner:    "Northlatch-Labs-LLC",
 			wantRepoName: "labs",
 			wantRef:      "dev",
 			wantSubPath:  "skills/test",
@@ -50,7 +50,7 @@ func TestParseGitHubRef(t *testing.T) {
 		{
 			name:         "full URL with blob",
 			repo:         "https://github.com/Northlatch-Labs-LLC/labs/blob/main/README.md",
-			wantOwner:    "sipeed",
+			wantOwner:    "Northlatch-Labs-LLC",
 			wantRepoName: "labs",
 			wantRef:      "main",
 			wantSubPath:  "README.md",
@@ -58,7 +58,7 @@ func TestParseGitHubRef(t *testing.T) {
 		{
 			name:         "full URL without ref",
 			repo:         "https://github.com/Northlatch-Labs-LLC/labs",
-			wantOwner:    "sipeed",
+			wantOwner:    "Northlatch-Labs-LLC",
 			wantRepoName: "labs",
 			wantRef:      "main",
 			wantSubPath:  "",
@@ -83,15 +83,15 @@ func TestParseGitHubRef(t *testing.T) {
 		},
 		{
 			name:         "with whitespace",
-			repo:         "  sipeed/labs  ",
-			wantOwner:    "sipeed",
+			repo:         "  Northlatch-Labs-LLC/labs  ",
+			wantOwner:    "Northlatch-Labs-LLC",
 			wantRepoName: "labs",
 			wantRef:      "main",
 			wantSubPath:  "",
 		},
 		{
 			name:           "invalid non github host",
-			repo:           "https://gitlab.com/sipeed/labs/-/tree/main/skills/test",
+			repo:           "https://gitlab.com/Northlatch-Labs-LLC/labs/-/tree/main/skills/test",
 			wantErr:        true,
 			wantErrContain: `invalid GitHub URL host "gitlab.com"`,
 		},
@@ -732,7 +732,7 @@ func TestSkillInstaller_InstallFromGitHub_SkillAlreadyExists(t *testing.T) {
 	os.WriteFile(filepath.Join(existingSkill, "SKILL.md"), []byte("existing"), 0o644)
 
 	// Try to install the same skill - should fail
-	err = installer.InstallFromGitHub(context.Background(), "sipeed/labs")
+	err = installer.InstallFromGitHub(context.Background(), "Northlatch-Labs-LLC/labs")
 	if err == nil {
 		t.Error("InstallFromGitHub() expected error for existing skill, got nil")
 	}

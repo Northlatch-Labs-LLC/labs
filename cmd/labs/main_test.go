@@ -18,7 +18,7 @@ func TestNewLabsCommand(t *testing.T) {
 
 	require.NotNil(t, cmd)
 
-	short := fmt.Sprintf("%s Labs — personal AI assistant", internal.Logo)
+	short := fmt.Sprintf("%s labs — the Northlatch Labs agent harness", internal.Logo)
 	longHas := strings.Contains(cmd.Long, config.FormatVersion())
 
 	assert.Equal(t, "labs", cmd.Use)
@@ -40,15 +40,11 @@ func TestNewLabsCommand(t *testing.T) {
 		"agent",
 		"auth",
 		"config",
-		"cron",
-		"gateway",
 		"mcp",
-		"migrate",
 		"model",
 		"onboard",
 		"skills",
 		"status",
-		"update",
 		"version",
 	}
 

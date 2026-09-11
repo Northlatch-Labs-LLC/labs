@@ -1107,62 +1107,6 @@ func TestAgentLoop_Steering_DirectResponseContinuesWithQueuedMessage(t *testing.
 	}
 }
 
-func TestAgentLoop_AgentForSession_UsesStoredScopeMetadata(t *testing.T) {
-	tmpDir, err := os.MkdirTemp("", "agent-test-*")
-	if err != nil {
-		t.Fatalf("Failed to create temp dir: %v", err)
-	}
-	defer os.RemoveAll(tmpDir)
-
-	cfg := &config.Config{
-		Agents: config.AgentsConfig{
-			Defaults: config.AgentDefaults{
-				Workspace:         tmpDir,
-				ModelName:         "test-model",
-				MaxTokens:         4096,
-				MaxToolIterations: 10,
-			},
-			List: []config.AgentConfig{
-				{ID: "sales", Default: true},
-				{ID: "support"},
-			},
-		},
-	}
-
-	al := NewAgentLoop(cfg, bus.NewMessageBus(), &mockProvider{})
-	support, ok := al.registry.GetAgent("support")
-	if !ok || support == nil {
-		t.Fatal("expected support agent")
-	}
-
-	metaStore, ok := support.Sessions.(session.MetadataAwareSessionStore)
-	if !ok {
-		t.Fatal("support session store does not support metadata")
-	}
-
-	alias := "agent:support:slack:channel:c001"
-	key := session.BuildOpaqueSessionKey(alias)
-	scope := &session.SessionScope{
-		Version:    session.ScopeVersionV1,
-		AgentID:    "support",
-		Channel:    "slack",
-		Account:    "default",
-		Dimensions: []string{"chat"},
-		Values: map[string]string{
-			"chat": "channel:c001",
-		},
-	}
-	metaStore.EnsureSessionMetadata(key, scope, []string{alias})
-
-	got := al.agentForSession(key)
-	if got == nil {
-		t.Fatal("agentForSession() returned nil")
-	}
-	if got.ID != "support" {
-		t.Fatalf("agentForSession() = %q, want %q", got.ID, "support")
-	}
-}
-
 func TestAgentLoop_Continue_PreservesSteeringMedia(t *testing.T) {
 	tmpDir, err := os.MkdirTemp("", "agent-test-*")
 	if err != nil {

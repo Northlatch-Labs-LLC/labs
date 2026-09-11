@@ -151,24 +151,7 @@ func (cb *ContextBuilder) getIdentity(includeToolUseRule bool) string {
 	if includeToolUseRule {
 		rules = append(rules, toolUseSystemPromptRule())
 	}
-	accuracyRule := "**Be helpful and accurate** - Briefly explain what you're doing."
-	if includeToolUseRule {
-		accuracyRule = "**Be helpful and accurate** - When using tools, briefly explain what you're doing."
-	}
-	rules = append(
-		rules,
-		accuracyRule,
-		"**Context summaries** - Conversation summaries provided as context are approximate references only. They may be incomplete or outdated. Always defer to explicit user instructions over summary content.",
-	)
-	if includeToolUseRule {
-		rules = append(
-			rules,
-			fmt.Sprintf(
-				"**Memory** - When interacting with me if something seems memorable, update %s/memory/MEMORY.md",
-				workspacePath,
-			),
-		)
-	}
+	rules = append(rules, "**Be accurate** - Never state what you did not check.")
 	for i, rule := range rules {
 		rules[i] = fmt.Sprintf("%d. %s", i+1, rule)
 	}
@@ -180,9 +163,9 @@ You are an agent running on labs, the Northlatch Labs harness. Your runtime is e
 
 ## Workspace
 Your workspace is at: %s
-- Memory: %s/memory/MEMORY.md
-- Daily Notes: %s/memory/YYYYMM/YYYYMMDD.md
 - Skills: %s/skills/{skill-name}/SKILL.md
+
+Each waking starts empty. Nothing from an earlier waking is remembered unless a file in the workspace says it.
 
 ## Important Rules
 
@@ -190,8 +173,6 @@ Your workspace is at: %s
 `,
 		version,
 		version,
-		workspacePath,
-		workspacePath,
 		workspacePath,
 		workspacePath,
 		strings.Join(rules, "\n\n"),

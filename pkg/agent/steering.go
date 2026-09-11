@@ -412,10 +412,8 @@ func (al *AgentLoop) Continue(ctx context.Context, sessionKey, channel, chatID s
 		}
 	}
 
+	// The ephemeral store keeps no scope metadata; steering continues without one.
 	var scope *session.SessionScope
-	if metaStore, ok := agent.Sessions.(session.MetadataAwareSessionStore); ok {
-		scope = metaStore.GetSessionScope(sessionKey)
-	}
 
 	return al.continueWithSteeringMessages(ctx, agent, sessionKey, channel, chatID, scope, steeringMsgs)
 }

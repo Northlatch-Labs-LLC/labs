@@ -81,8 +81,37 @@ func migrateLegacyAgentDefaultsModel(m map[string]any) {
 }
 
 // loadConfigV1 loads a version 1 config (current schema)
+// removedSections are top-level config keys upstream PicoClaw wrote that labs
+// has no code for. A config.json from a PicoClaw host carries them; they are
+// dropped on load rather than refused, so an existing host can switch to labs
+// without hand-editing its config.
+var removedSections = []string{"channels", "channel_list", "devices", "heartbeat", "voice", "evolution"}
+
+func dropRemovedSections(data []byte) []byte {
+	var raw map[string]json.RawMessage
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return data
+	}
+	changed := false
+	for _, key := range removedSections {
+		if _, ok := raw[key]; ok {
+			delete(raw, key)
+			changed = true
+		}
+	}
+	if !changed {
+		return data
+	}
+	out, err := json.Marshal(raw)
+	if err != nil {
+		return data
+	}
+	return out
+}
+
 func loadConfig(data []byte) (*Config, error) {
 	cfg := DefaultConfig()
+	data = dropRemovedSections(data)
 
 	// Pre-scan the JSON to check how many model_list entries the user provided.
 	// Go's JSON decoder reuses existing slice backing-array elements rather than

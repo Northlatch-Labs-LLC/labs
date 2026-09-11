@@ -190,23 +190,10 @@ func TestMigrateV0ToV3(t *testing.T) {
 	// api_key is converted to api_keys during migration
 	require.Contains(t, firstModel, "api_keys", "api_keys should exist")
 
-	// Channels should be converted to nested format with channel_list
-	channelList, ok := m["channel_list"].(map[string]any)
-	require.True(t, ok, "channel_list should exist")
+	// labs has no chat channels: both keys are dropped by the migration.
+	require.NotContains(t, m, "channel_list", "labs drops channel_list")
 	require.NotContains(t, m, "channels", "old 'channels' key should be removed")
 
-	// telegram channel should have settings
-	telegram := channelList["telegram"].(map[string]any)
-	require.Equal(t, "telegram", telegram["type"])
-	require.Contains(t, telegram, "settings", "telegram should have settings")
-	settings := telegram["settings"].(map[string]any)
-	require.Equal(t, "bot-token", settings["token"])
-
-	// discord channel should have group_trigger and mention_only in group_trigger
-	discord := channelList["discord"].(map[string]any)
-	require.Equal(t, "discord", discord["type"])
-	discordGroupTrigger := discord["group_trigger"].(map[string]any)
-	require.Equal(t, true, discordGroupTrigger["mention_only"])
 }
 
 // TestMigrateV0ToV3_WithExistingModelList preserves existing model_list when present.
@@ -277,39 +264,9 @@ func TestMigrateV1ToV3(t *testing.T) {
 	// Version should be set to CurrentVersion
 	require.Equal(t, CurrentVersion, m["version"])
 
-	// Channels should be converted to nested format
-	channelList, ok := m["channel_list"].(map[string]any)
-	require.True(t, ok, "channel_list should exist")
+	// labs has no chat channels: both keys are dropped by the migration.
+	require.NotContains(t, m, "channel_list", "labs drops channel_list")
 	require.NotContains(t, m, "channels", "old 'channels' key should be removed")
-
-	// telegram: flat fields moved to settings
-	telegram := channelList["telegram"].(map[string]any)
-	require.Equal(t, "telegram", telegram["type"])
-	tgSettings := telegram["settings"].(map[string]any)
-	require.Equal(t, "bot-token", tgSettings["token"])
-	require.Equal(t, "https://custom.api.com", tgSettings["base_url"])
-
-	// discord: mention_only should be moved to group_trigger
-	discord := channelList["discord"].(map[string]any)
-	require.Equal(t, "discord", discord["type"])
-	require.Contains(t, discord, "group_trigger", "mention_only should be migrated to group_trigger")
-	gt := discord["group_trigger"].(map[string]any)
-	require.Equal(t, true, gt["mention_only"])
-	discordSettings := discord["settings"].(map[string]any)
-	require.Equal(t, "socks5://localhost:1080", discordSettings["proxy"])
-
-	// onebot: group_trigger_prefix should be moved to group_trigger.prefixes
-	onebot := channelList["onebot"].(map[string]any)
-	require.Equal(t, "onebot", onebot["type"])
-	obGroupTrigger := onebot["group_trigger"].(map[string]any)
-	require.Equal(
-		t,
-		[]any{"/"},
-		obGroupTrigger["prefixes"],
-		"group_trigger_prefix should be moved to group_trigger.prefixes",
-	)
-	obSettings := onebot["settings"].(map[string]any)
-	require.Equal(t, "ws://localhost:3001", obSettings["ws_url"])
 }
 
 // TestMigrateV1ToV3_ApiKeyConversion verifies api_key → api_keys conversion.
@@ -358,7 +315,7 @@ func TestMigrateV1ToV3_ApiKeyConversion(t *testing.T) {
 	require.NotContains(t, secondModel, "api_keys")
 }
 
-// TestMigrateV1ToV3_AlreadyNestedFormat leaves already-nested channels unchanged.
+// TestMigrateV1ToV3_AlreadyNestedFormat: nested channel config from a v1 file is dropped, not migrated.
 func TestMigrateV1ToV3_AlreadyNestedFormat(t *testing.T) {
 	v1Config := `{
 		"version": 1,
@@ -386,12 +343,7 @@ func TestMigrateV1ToV3_AlreadyNestedFormat(t *testing.T) {
 	err = migrateV2ToV3(m)
 	require.NoError(t, err)
 
-	channelList := m["channel_list"].(map[string]any)
-	telegram := channelList["telegram"].(map[string]any)
-	// Should not be double-wrapped
-	require.Equal(t, "telegram", telegram["type"])
-	settings := telegram["settings"].(map[string]any)
-	require.Equal(t, "bot-token", settings["token"])
-	// Should NOT have nested settings inside settings
-	require.NotContains(t, settings, "settings")
+	require.NotContains(t, m, "channel_list")
+	require.NotContains(t, m, "channels")
+	require.Equal(t, CurrentVersion, m["version"])
 }
