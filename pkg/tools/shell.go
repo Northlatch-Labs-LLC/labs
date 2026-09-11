@@ -400,6 +400,7 @@ func (t *ExecTool) runSync(ctx context.Context, command, cwd string) *ToolResult
 	} else {
 		cmd = exec.CommandContext(cmdCtx, "sh", "-c", command)
 	}
+	cmd.Env = append(os.Environ(), labsRuntimeEnv())
 	if cwd != "" {
 		cmd.Dir = cwd
 	}
@@ -522,6 +523,7 @@ func (t *ExecTool) runBackground(ctx context.Context, command, cwd string, ptyEn
 	} else {
 		cmd = exec.Command("sh", "-c", command)
 	}
+	cmd.Env = append(os.Environ(), labsRuntimeEnv())
 	if cwd != "" {
 		cmd.Dir = cwd
 	}
@@ -1425,4 +1427,11 @@ func (t *ExecTool) SetAllowPatterns(patterns []string) error {
 		t.allowPatterns = append(t.allowPatterns, re)
 	}
 	return nil
+}
+
+// labsRuntimeEnv names this harness to every child the exec tool starts, so a
+// script that signs a statement naming its runtime reports labs, not the
+// process that happened to launch it. The register keeps that string forever.
+func labsRuntimeEnv() string {
+	return "LABS_RUNTIME=labs " + config.FormatVersion()
 }

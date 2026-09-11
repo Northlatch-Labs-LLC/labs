@@ -1,0 +1,31 @@
+# labs — one waking. Modelled on heron-beat.service: root-owned, oneshot, dies when done.
+#
+# The timer rings; this starts `labs agent` once via /usr/local/bin/labs-beat; the
+# process ends. Nothing accumulates because nothing survives.
+
+[Unit]
+Description=labs — one waking
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+# A waking that hangs against an unreachable gateway must end before the next tick.
+TimeoutStartSec=600
+User=root
+Group=root
+Environment=LABS_HOME=/root/.labs
+ExecStart=/usr/local/bin/labs-beat
+
+ProtectSystem=strict
+# The workspace (state.jsonl is appended there) and the lock beside it.
+ReadWritePaths=/root/.labs
+PrivateTmp=yes
+NoNewPrivileges=yes
+UMask=0027
+
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

@@ -162,10 +162,13 @@ func main() {
 
 	cliui.Init(earlyColorDisabled())
 
-	if earlyColorDisabled() {
-		fmt.Print(plainBanner)
-	} else {
-		fmt.Printf("%s", banner)
+	// A waking is a log line, not a splash screen: no banner for `labs agent`.
+	if !(len(os.Args) > 1 && os.Args[1] == "agent") {
+		if earlyColorDisabled() {
+			fmt.Print(plainBanner)
+		} else {
+			fmt.Printf("%s", banner)
+		}
 	}
 
 	tzEnv := os.Getenv("TZ")

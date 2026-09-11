@@ -1,4 +1,4 @@
-.PHONY: all build build-linux install clean vet test fmt deps help
+.PHONY: all build build-linux package install clean vet test fmt deps help
 
 # labs — the Northlatch Labs agent harness. One binary, built from source.
 
@@ -44,6 +44,17 @@ build:
 ## build-linux: cross-build for the swarm hosts (linux/amd64) into build/labs-linux-amd64
 build-linux:
 	@$(MAKE) build PLATFORM=linux ARCH=amd64
+
+## package: the deliverable — build/labs-$(VERSION)-linux-amd64.tar.gz with bin/, config.json, workspace/, systemd/, install.sh
+package: build-linux
+	@rm -rf $(BUILD_DIR)/pkg && mkdir -p $(BUILD_DIR)/pkg/bin
+	@cp $(BUILD_DIR)/$(BINARY_NAME)-linux-amd64 $(BUILD_DIR)/pkg/bin/labs
+	@cp bin/labs-beat bin/labs-beat-loop $(BUILD_DIR)/pkg/bin/
+	@cp -R config.json workspace systemd install.sh README.md LICENSE $(BUILD_DIR)/pkg/
+	@chmod +x $(BUILD_DIR)/pkg/bin/* $(BUILD_DIR)/pkg/install.sh
+	@tar -C $(BUILD_DIR)/pkg -czf $(BUILD_DIR)/$(BINARY_NAME)-$(VERSION)-linux-amd64.tar.gz .
+	@shasum -a 256 $(BUILD_DIR)/$(BINARY_NAME)-$(VERSION)-linux-amd64.tar.gz | tee $(BUILD_DIR)/$(BINARY_NAME)-$(VERSION)-linux-amd64.tar.gz.sha256
+	@echo "Package: $(BUILD_DIR)/$(BINARY_NAME)-$(VERSION)-linux-amd64.tar.gz"
 
 ## install: copy build/labs into $(INSTALL_BIN_DIR)
 install: build

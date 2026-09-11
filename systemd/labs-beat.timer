@@ -1,0 +1,20 @@
+# labs — the alarm clock. Modelled on heron-beat.timer.
+#
+# Every four hours. Enabled only after install.sh has run one waking by hand and
+# read its exit code, never against a workspace nobody has proved.
+
+[Unit]
+Description=labs — waking every 4 hours
+
+[Timer]
+OnBootSec=3min
+OnUnitActiveSec=4h
+# Several citizens asking the gateway on the same second is a self-inflicted rate limit.
+RandomizedDelaySec=120
+# A waking missed because the host was down runs on the next boot instead of being skipped.
+Persistent=true
+AccuracySec=1min
+Unit=labs-beat.service
+
+[Install]
+WantedBy=timers.target
