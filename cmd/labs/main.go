@@ -17,7 +17,6 @@ import (
 
 	"github.com/Northlatch-Labs-LLC/labs/cmd/labs/internal"
 	"github.com/Northlatch-Labs-LLC/labs/cmd/labs/internal/agent"
-	"github.com/Northlatch-Labs-LLC/labs/cmd/labs/internal/auth"
 	"github.com/Northlatch-Labs-LLC/labs/cmd/labs/internal/cliui"
 	configcmd "github.com/Northlatch-Labs-LLC/labs/cmd/labs/internal/config"
 	"github.com/Northlatch-Labs-LLC/labs/cmd/labs/internal/mcp"
@@ -127,7 +126,6 @@ labs --no-color status`,
 		configcmd.NewConfigCommand(),
 		onboard.NewOnboardCommand(),
 		agent.NewAgentCommand(),
-		auth.NewAuthCommand(),
 		status.NewStatusCommand(),
 		mcp.NewMCPCommand(),
 		skills.NewSkillsCommand(),

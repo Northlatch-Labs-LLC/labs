@@ -3,21 +3,8 @@ package providers
 import httpapi "github.com/Northlatch-Labs-LLC/labs/pkg/providers/httpapi"
 
 type (
-	GeminiProvider = httpapi.GeminiProvider
-	HTTPProvider   = httpapi.HTTPProvider
+	HTTPProvider = httpapi.HTTPProvider
 )
-
-func NewGeminiProvider(
-	apiKey string,
-	apiBase string,
-	proxy string,
-	userAgent string,
-	requestTimeoutSeconds int,
-	extraBody map[string]any,
-	customHeaders map[string]string,
-) *GeminiProvider {
-	return httpapi.NewGeminiProvider(apiKey, apiBase, proxy, userAgent, requestTimeoutSeconds, extraBody, customHeaders)
-}
 
 func NewHTTPProvider(apiKey, apiBase, proxy string) *HTTPProvider {
 	return httpapi.NewHTTPProvider(apiKey, apiBase, proxy)

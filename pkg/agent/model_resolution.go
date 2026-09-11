@@ -81,49 +81,19 @@ func candidateFromModelConfig(
 	}, true
 }
 
-func lookupModelConfigByRef(cfg *config.Config, raw string, defaultProvider ...string) *config.ModelConfig {
+// lookupModelConfigByRef resolves a model reference to a model_list entry by
+// model_name and nothing else. Upstream continued with a scan of every entry's
+// model id, first match wins; two stock entries shared the id "auto", so an
+// agent whose alias had been replaced by its id landed on OpenRouter instead of
+// the gateway (the witness's 401). labs never matches on the id.
+func lookupModelConfigByRef(cfg *config.Config, raw string, _ ...string) *config.ModelConfig {
 	raw = strings.TrimSpace(raw)
 	if raw == "" || cfg == nil {
 		return nil
 	}
-
 	if mc, err := cfg.GetModelConfig(raw); err == nil && mc != nil && strings.TrimSpace(mc.Model) != "" {
 		return mc
 	}
-
-	rawRef := providers.ParseModelRef(raw, "")
-	rawKey := ""
-	if rawRef != nil && strings.TrimSpace(rawRef.Provider) != "" && strings.TrimSpace(rawRef.Model) != "" {
-		rawKey = providers.ModelKey(rawRef.Provider, rawRef.Model)
-	}
-
-	fallbackProvider := ""
-	if len(defaultProvider) > 0 {
-		fallbackProvider = effectiveDefaultProvider(defaultProvider[0])
-	}
-	for i := range cfg.ModelList {
-		mc := cfg.ModelList[i]
-		if mc == nil {
-			continue
-		}
-		fullModel := strings.TrimSpace(mc.Model)
-		if fullModel == "" {
-			continue
-		}
-		protocol, modelID := modelProviderAndIDForResolution(fallbackProvider, mc)
-		if fullModel == raw {
-			return mc
-		}
-		if modelID == raw {
-			if fallbackProvider == "" || providers.NormalizeProvider(protocol) == fallbackProvider {
-				return mc
-			}
-		}
-		if rawKey != "" && providers.ModelKey(protocol, modelID) == rawKey {
-			return mc
-		}
-	}
-
 	return nil
 }
 
