@@ -20,8 +20,10 @@ set -u
 EVERY="${LABS_BEAT_EVERY:-14400}"
 LOG="${LABS_BEAT_LOG:-/var/log/labs-beat.log}"
 echo $$ > /run/labs-beat-loop.pid
+# Sleep first. install.sh has just proved one waking by hand; ringing the bell
+# again the moment the loop starts is a double waking on the same quota.
 while :; do
+  sleep "$EVERY"
   /usr/local/bin/labs-beat >> "$LOG" 2>&1
   printf '%s waking exited (%s) - next in %ss\n' "$(date -u +%FT%TZ)" "$?" "$EVERY" >> "$LOG"
-  sleep "$EVERY"
 done
