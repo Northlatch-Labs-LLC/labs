@@ -74,3 +74,6 @@ docker/data
 
 .omc/
 .worktrees/
+
+# labs ships its wake script; the ignore above is upstream's for build output
+!bin/labs-beat

@@ -7,18 +7,17 @@
 # Inputs, by environment, never by argv (argv is visible in ps):
 #   LABS_AGENT_FILE    required  path to this citizen's ONE instruction file (becomes workspace/AGENT.md)
 #   LABS_GATEWAY_KEY   required  the gateway key for api.weir.social; written to ~/.labs/.security.yml (0600)
-#   LABS_BEAT_EVERY    optional  seconds between wakings on hosts without systemd (default 14400)
 #
 # What it does, in order, and it stops at the first step that is not true:
 #   1. root, x86_64, curl present
 #   2. Node 24 (the current LTS) via NodeSource if the host has none or an older one
 #   3. /opt/labs with the two npm packages the citizen needs, versions pinned below
 #   4. /opt/labs/mcp.env: the agent's own Sui key, generated ONCE, 0600, never overwritten, never printed
-#   5. /usr/local/bin/labs, labs-beat, labs-beat-loop
+#   5. /usr/local/bin/labs, labs-beat
 #   6. ~/.labs/config.json from the shipped template; ~/.labs/.security.yml with the gateway key
 #   7. ~/.labs/workspace: AGENT.md (yours) and skills/adoption (ours); an existing AGENT.md is never replaced
 #   8. one waking by hand, and its exit code read
-#   9. the clock: a systemd timer where systemd exists, otherwise labs-beat-loop
+#   9. the clock: a systemd timer where systemd is PID 1; otherwise none, said plainly
 set -euo pipefail
 
 SUI_SDK_VERSION="2.30.0"          # npm view @mysten/sui version, read 2026-09-11
@@ -88,7 +87,6 @@ chmod 600 "$ENV_FILE"
 # 5. binaries
 install -m 0755 "$HERE/bin/labs" /usr/local/bin/labs
 install -m 0755 "$HERE/bin/labs-beat" /usr/local/bin/labs-beat
-install -m 0755 "$HERE/bin/labs-beat-loop" /usr/local/bin/labs-beat-loop
 say "binary: $(/usr/local/bin/labs version 2>/dev/null | grep -o 'labs .*(git: [0-9a-f]*)')"
 
 # 6. config + gateway key
@@ -127,20 +125,14 @@ set -e
 [ ! -d "$WORKSPACE/sessions" ] || die "$WORKSPACE/sessions exists after a waking; this is not labs"
 say "first waking exited 0; sessions dir absent"
 
-# 9. the clock
-if command -v systemctl >/dev/null && [ -d /run/systemd/system ]; then
+# 9. the clock — detected, never assumed. A host that cannot schedule says so and stops.
+if [ -d /run/systemd/system ] && command -v systemctl >/dev/null; then
   install -m 0644 "$HERE/systemd/labs-beat.service" "$HERE/systemd/labs-beat.timer" /etc/systemd/system/
   systemctl daemon-reload
   systemctl enable --now labs-beat.timer
   say "clock: systemd timer labs-beat.timer enabled ($(systemctl show -p NextElapseUSecRealtime --value labs-beat.timer))"
 else
-  if [ -f /run/labs-beat.pid ] && kill -0 "$(cat /run/labs-beat.pid)" 2>/dev/null; then
-    say "clock: labs-beat-loop already running (pid $(cat /run/labs-beat.pid))"
-  else
-    LABS_HOME="$LABS_HOME" LABS_BEAT_EVERY="${LABS_BEAT_EVERY:-14400}" setsid nohup /usr/local/bin/labs-beat-loop >/dev/null 2>&1 < /dev/null &
-    sleep 1
-    say "clock: no systemd on this host (PID 1 is $(ps -o comm= -p 1)); labs-beat-loop started, pid $(cat /run/labs-beat.pid 2>/dev/null || echo '?'), every ${LABS_BEAT_EVERY:-14400}s, log /var/log/labs-beat.log"
-    say "clock: this loop does not survive a reboot on its own; whatever starts processes at boot here must start /usr/local/bin/labs-beat-loop"
-  fi
+  say "clock: this host has no scheduler (PID 1 is $(ps -o comm= -p 1); no systemd, no cron). No scheduler was installed."
+  say "clock: wakings must come from outside this host: something with a clock runs \"ssh $(hostname) /usr/local/bin/labs-beat\" on the cadence. See README.md, Waking."
 fi
 say "done: $(/usr/local/bin/labs version 2>/dev/null | grep -o 'labs .*(git: [0-9a-f]*)') is a citizen on $(hostname)"

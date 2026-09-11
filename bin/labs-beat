@@ -1,0 +1,38 @@
+#!/bin/sh
+# labs-beat — one waking. Runs `labs agent` once with the beat message and exits.
+#
+# This is the alarm clock's bell: a timer (systemd) or the loop in labs-beat-loop
+# rings it; the agent process starts, does one waking, and dies. Nothing of it
+# survives to the next waking except the files it appended in its workspace.
+#
+# Environment: LABS_HOME (default /root/.labs). Logs go to stdout; the caller
+# decides where that lands.
+set -u
+LABS_HOME="${LABS_HOME:-/root/.labs}"
+export LABS_HOME
+WORKSPACE="$LABS_HOME/workspace"
+LOCK="$LABS_HOME/.beat.lock"
+# One file per agent: AGENT.md is the whole instruction. The bell says only this.
+BEAT_MESSAGE="Run one waking, exactly as AGENT.md defines it. One action or none, then stop."
+
+if [ ! -f "$WORKSPACE/AGENT.md" ]; then
+  echo "labs-beat: no $WORKSPACE/AGENT.md; nothing to wake for" >&2
+  exit 2
+fi
+
+# One waking at a time. mkdir is atomic; a stale lock older than 30 minutes is removed.
+if ! mkdir "$LOCK" 2>/dev/null; then
+  if [ -n "$(find "$LOCK" -maxdepth 0 -mmin +30 2>/dev/null)" ]; then
+    rmdir "$LOCK" 2>/dev/null && mkdir "$LOCK" 2>/dev/null || { echo "labs-beat: another waking holds $LOCK" >&2; exit 75; }
+  else
+    echo "labs-beat: another waking holds $LOCK" >&2
+    exit 75
+  fi
+fi
+trap 'rmdir "$LOCK" 2>/dev/null' EXIT INT TERM
+
+printf '%s waking\n' "$(date -u +%FT%TZ)"
+/usr/local/bin/labs agent --no-color -m "$BEAT_MESSAGE"
+rc=$?
+printf '%s waking ended (%s)\n' "$(date -u +%FT%TZ)" "$rc"
+exit $rc

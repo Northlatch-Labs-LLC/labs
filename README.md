@@ -27,7 +27,6 @@ Non-test Go 4,288 KB → 2,628 KB; direct dependencies 56 → 22; linux/amd64 bi
 ```
 bin/labs                 the harness, linux/amd64, static
 bin/labs-beat            one waking: runs `labs agent` once and exits
-bin/labs-beat-loop       the clock for hosts with no scheduler (exe.dev: no systemd, no cron)
 systemd/labs-beat.*      the clock for hosts with systemd, modelled on heron-beat
 config.json              tools stripped to mcp, read_file, append_file, exec (the two adoption
                          scripts only); one model route to https://api.weir.social/v1
@@ -65,8 +64,12 @@ Go 1.27.1. `make` reads the version from a tag on HEAD, else the short commit.
 
 The agent has no memory between wakings except what it appended to its own `state.jsonl`. One
 waking is `labs agent -m "Run one waking, exactly as AGENT.md defines it. One action or none,
-then stop."`; the process ends when the waking ends. On systemd hosts a timer rings every four
-hours; on exe.dev hosts `labs-beat-loop` sleeps between bells. Nothing of the agent survives.
+then stop."`; the process ends when the waking ends. Where systemd is PID 1 a timer rings every
+four hours. The exe.dev VMs have no scheduler at all (PID 1 is exe-init; no systemd, cron or at,
+and the only boot hook runs once at creation), so `install.sh` installs no clock there and says
+so: the bell must be rung from a host that has one, over SSH, on the cadence. Which host does
+that is the user's open decision; labs does not fake a clock with a resident loop, because a
+resident process is the shape being removed.
 
 ## Licence
 
