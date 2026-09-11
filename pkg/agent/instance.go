@@ -152,10 +152,7 @@ func NewAgentInstance(
 	provider = resolvePrimaryProviderForAgent(cfg, workspace, agentID, model, provider)
 	warnOnUnknownAgentMCPServerDeclarations(agentID, workspace, cfg, definition)
 
-	maxIter := defaults.MaxToolIterations
-	if maxIter == 0 {
-		maxIter = 20
-	}
+	maxIter := effectiveMaxToolIterations(defaults.MaxToolIterations)
 
 	maxTokens := defaults.MaxTokens
 	if maxTokens == 0 {
@@ -476,4 +473,21 @@ func expandHome(path string) string {
 		return home
 	}
 	return path
+}
+
+// effectiveMaxToolIterations applies the labs bounds: unset means the default,
+// and nothing may exceed the ceiling. A config that asks for more is clamped
+// and the clamp is logged once at agent creation.
+func effectiveMaxToolIterations(configured int) int {
+	if configured <= 0 {
+		return config.DefaultMaxToolIterations
+	}
+	if configured > config.MaxToolIterationsCeiling {
+		logger.WarnCF("agent", "max_tool_iterations above the labs ceiling; clamped", map[string]any{
+			"configured": configured,
+			"ceiling":    config.MaxToolIterationsCeiling,
+		})
+		return config.MaxToolIterationsCeiling
+	}
+	return configured
 }

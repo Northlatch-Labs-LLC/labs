@@ -27,6 +27,15 @@ var rrCounter atomic.Uint64
 // CurrentVersion is the latest config schema version
 const CurrentVersion = 3
 
+// Tool-iteration bounds. Each iteration resends the whole conversation, so
+// the count bounds the spend of a waking. Upstream defaulted to 50 (measured on
+// the swarm: one beat of ~940,000 tokens). The default is what the witness
+// runs; the ceiling is enforced in code so no config can raise it further.
+const (
+	DefaultMaxToolIterations = 8
+	MaxToolIterationsCeiling = 20
+)
+
 // Config is the current config structure with version support.
 type Config struct {
 	// Config schema version for migration.
