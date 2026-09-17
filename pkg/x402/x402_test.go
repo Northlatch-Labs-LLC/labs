@@ -51,7 +51,7 @@ func TestWallet_MatchesSDK(t *testing.T) {
 	if w.Address() != vecAddress {
 		t.Fatalf("address %s, want %s", w.Address(), vecAddress)
 	}
-	if got := hex.EncodeToString(w.SignRaw([]byte("labs x402 vector"))); got != vecRawSigHex {
+	if got := hex.EncodeToString(w.signRaw([]byte("labs x402 vector"))); got != vecRawSigHex {
 		t.Fatalf("raw signature differs from the SDK's")
 	}
 	seed, _ := hex.DecodeString(vecSeedHex)

@@ -285,8 +285,12 @@ func TestLoadStoreMergesAntigravityAliasesPreferringNewerExpiry(t *testing.T) {
 	if cred.AccessToken != "fresh-token" {
 		t.Fatalf("AccessToken = %q, want %q", cred.AccessToken, "fresh-token")
 	}
-	if cred.RefreshToken != "legacy-refresh" {
-		t.Fatalf("RefreshToken = %q, want %q", cred.RefreshToken, "legacy-refresh")
+	// Fix M-01: must NOT back-fill RefreshToken from the shorter-lived alias
+	// (antigravity, expires 10:00) into the longer-lived winner (google-antigravity,
+	// expires 12:00). Using the shorter-lived refresh token would downgrade the
+	// effective session lifetime when the access token is renewed.
+	if cred.RefreshToken != "" {
+		t.Fatalf("RefreshToken = %q, want %q (must not back-fill from shorter-lived credential)", cred.RefreshToken, "")
 	}
 	if cred.Email != "legacy@example.com" {
 		t.Fatalf("Email = %q, want %q", cred.Email, "legacy@example.com")

@@ -62,7 +62,7 @@ func (l *Ledger) PaidSince(t time.Time) (uint64, error) {
 	defer f.Close()
 	var total uint64
 	sc := bufio.NewScanner(f)
-	sc.Buffer(make([]byte, 0, 64*1024), 1024*1024)
+	sc.Buffer(make([]byte, 0, 64*1024), 16*1024*1024) // L-02: raise limit to 16 MiB; default 1 MiB silently drops larger entries
 	for sc.Scan() {
 		var e Entry
 		if err := json.Unmarshal(sc.Bytes(), &e); err != nil {
