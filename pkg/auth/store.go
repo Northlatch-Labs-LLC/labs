@@ -84,7 +84,9 @@ func mergeCredentials(primary, secondary *AuthCredential) *AuthCredential {
 	if merged.AccessToken == "" {
 		merged.AccessToken = secondary.AccessToken
 	}
-	if merged.RefreshToken == "" {
+	// Never back-fill RefreshToken from a shorter-lived credential: doing so
+	// downgrades the effective lifetime of the stored credential.
+	if merged.RefreshToken == "" && !secondary.ExpiresAt.Before(merged.ExpiresAt) {
 		merged.RefreshToken = secondary.RefreshToken
 	}
 	if merged.AccountID == "" {
