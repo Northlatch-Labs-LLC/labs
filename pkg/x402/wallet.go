@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/btcsuite/btcutil/bech32"
 	"golang.org/x/crypto/blake2b"
 )
 
@@ -31,16 +32,16 @@ var intentTransactionData = []byte{0, 0, 0}
 // NewWalletFromSuiPrivateKey parses the bech32 "suiprivkey1..." form the Sui
 // tooling exports (flag byte followed by the 32-byte seed).
 func NewWalletFromSuiPrivateKey(s string) (*Wallet, error) {
-	hrp, data, err := bech32Decode(strings.TrimSpace(s))
+	hrp, data, err := bech32.Decode(strings.TrimSpace(s))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("x402: bech32 decode: %w", err)
 	}
 	if hrp != bech32HRP {
 		return nil, fmt.Errorf("x402: key prefix %q, want %q", hrp, bech32HRP)
 	}
-	raw, err := convertBits(data, 5, 8, false)
+	raw, err := bech32.ConvertBits(data, 5, 8, false)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("x402: bech32 bit conversion: %w", err)
 	}
 	if len(raw) != 33 || raw[0] != flagEd25519 {
 		return nil, fmt.Errorf("x402: key is not a 32-byte ed25519 seed with flag 0x00 (len %d, flag %#x)", len(raw), raw[0])
@@ -82,82 +83,3 @@ func (w *Wallet) SignTransaction(txBytes []byte) string {
 // prevent callers from signing arbitrary bytes without an intent prefix.
 func (w *Wallet) signRaw(msg []byte) []byte { return ed25519.Sign(w.priv, msg) }
 
-// --- bech32 (BIP-173), decode only ---
-
-const bech32Charset = "qpzry9x8gf2tvdw0s3jn54khce6mua7l" // 32 symbols, BIP-173; checked against sipa/bech32 ref
-
-func bech32Polymod(values []byte) uint32 {
-	gen := []uint32{0x3b6a57b2, 0x26508e6d, 0x1ea119fa, 0x3d4233dd, 0x2a1462b3}
-	chk := uint32(1)
-	for _, v := range values {
-		b := chk >> 25
-		chk = (chk&0x1ffffff)<<5 ^ uint32(v)
-		for i := 0; i < 5; i++ {
-			if (b>>uint(i))&1 == 1 {
-				chk ^= gen[i]
-			}
-		}
-	}
-	return chk
-}
-
-func bech32HRPExpand(hrp string) []byte {
-	out := make([]byte, 0, len(hrp)*2+1)
-	for i := 0; i < len(hrp); i++ {
-		out = append(out, hrp[i]>>5)
-	}
-	out = append(out, 0)
-	for i := 0; i < len(hrp); i++ {
-		out = append(out, hrp[i]&31)
-	}
-	return out
-}
-
-func bech32Decode(s string) (string, []byte, error) {
-	if strings.ToLower(s) != s && strings.ToUpper(s) != s {
-		return "", nil, fmt.Errorf("x402: bech32 mixed case")
-	}
-	s = strings.ToLower(s)
-	pos := strings.LastIndex(s, "1")
-	if pos < 1 || pos+7 > len(s) {
-		return "", nil, fmt.Errorf("x402: bech32 separator")
-	}
-	hrp := s[:pos]
-	data := make([]byte, 0, len(s)-pos-1)
-	for _, c := range s[pos+1:] {
-		idx := strings.IndexRune(bech32Charset, c)
-		if idx < 0 {
-			return "", nil, fmt.Errorf("x402: bech32 character %q", c)
-		}
-		data = append(data, byte(idx))
-	}
-	if bech32Polymod(append(bech32HRPExpand(hrp), data...)) != 1 {
-		return "", nil, fmt.Errorf("x402: bech32 checksum")
-	}
-	return hrp, data[:len(data)-6], nil
-}
-
-func convertBits(data []byte, from, to uint, pad bool) ([]byte, error) {
-	acc, bits := uint32(0), uint(0)
-	out := make([]byte, 0, len(data)*int(from)/int(to)+1)
-	maxv := uint32(1)<<to - 1
-	for _, v := range data {
-		if uint32(v)>>from != 0 {
-			return nil, fmt.Errorf("x402: convertBits value out of range")
-		}
-		acc = acc<<from | uint32(v)
-		bits += from
-		for bits >= to {
-			bits -= to
-			out = append(out, byte(acc>>bits&maxv))
-		}
-	}
-	if pad {
-		if bits > 0 {
-			out = append(out, byte(acc<<(to-bits)&maxv))
-		}
-	} else if bits >= from || acc<<(to-bits)&maxv != 0 {
-		return nil, fmt.Errorf("x402: convertBits padding")
-	}
-	return out, nil
-}
