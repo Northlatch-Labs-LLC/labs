@@ -5,11 +5,16 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/Northlatch-Labs-LLC/labs/pkg/config"
 	"github.com/Northlatch-Labs-LLC/labs/pkg/fileutil"
 )
+
+// storeMu guards all Load→modify→Save sequences so concurrent goroutines
+// cannot interleave reads and writes to the credential file.
+var storeMu sync.RWMutex
 
 type AuthCredential struct {
 	AccessToken  string    `json:"access_token"`
@@ -198,6 +203,9 @@ func SaveStore(store *AuthStore) error {
 }
 
 func GetCredential(provider string) (*AuthCredential, error) {
+	storeMu.RLock()
+	defer storeMu.RUnlock()
+
 	store, err := LoadStore()
 	if err != nil {
 		return nil, err
@@ -210,6 +218,9 @@ func GetCredential(provider string) (*AuthCredential, error) {
 }
 
 func SetCredential(provider string, cred *AuthCredential) error {
+	storeMu.Lock()
+	defer storeMu.Unlock()
+
 	store, err := LoadStore()
 	if err != nil {
 		return err
@@ -229,6 +240,9 @@ func SetCredential(provider string, cred *AuthCredential) error {
 }
 
 func DeleteCredential(provider string) error {
+	storeMu.Lock()
+	defer storeMu.Unlock()
+
 	store, err := LoadStore()
 	if err != nil {
 		return err
@@ -238,6 +252,9 @@ func DeleteCredential(provider string) error {
 }
 
 func DeleteAllCredentials() error {
+	storeMu.Lock()
+	defer storeMu.Unlock()
+
 	path := authFilePath()
 	if err := os.Remove(path); err != nil && !os.IsNotExist(err) {
 		return err
