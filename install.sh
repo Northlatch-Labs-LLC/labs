@@ -100,12 +100,15 @@ sed "s#__WORKSPACE__#$WORKSPACE#g" "$HERE/config.json" > "$LABS_HOME/config.json
 chmod 600 "$LABS_HOME/config.json"
 if [ -n "${LABS_GATEWAY_KEY:-}" ]; then
   umask 077
+  # Escape backslashes then double-quotes so the value is safe inside a YAML double-quoted scalar.
+  _gw_key_yaml=$(printf '%s' "${LABS_GATEWAY_KEY}" | sed 's/\\/\\\\/g; s/"/\\"/g')
   cat > "$LABS_HOME/.security.yml" <<EOF
 model_list:
   weir-gw:0:
     api_keys:
-      - "${LABS_GATEWAY_KEY}"
+      - "${_gw_key_yaml}"
 EOF
+  unset _gw_key_yaml
   umask 022
   say "config: $LABS_HOME/config.json; gateway key written to $LABS_HOME/.security.yml (0600), not in config.json"
 else
