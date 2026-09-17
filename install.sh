@@ -26,7 +26,10 @@ set -euo pipefail
 
 SUI_SDK_VERSION="2.30.0"          # npm view @mysten/sui version, read 2026-09-11
 WEIR_MCP_VERSION="1.0.4"          # npm view @projectx-social/mcp version, read 2026-09-11
-NODE_MAJOR="24"                   # nodejs.org/dist/index.json latest LTS (Krypton), read 2026-09-11
+NODE_VERSION="24.21.0"            # nodejs.org/dist/index.json latest LTS (Krypton), read 2026-09-16
+NODE_MAJOR="${NODE_VERSION%%.*}"   # derived; used for version floor check only
+# SHA-256 from https://nodejs.org/dist/v${NODE_VERSION}/SHASUMS256.txt — update with NODE_VERSION
+NODE_SHA256="fd8e59d5a511510f6a298afb548f18c7d2b1be404d8b4a27d94fbe49f56cb2d6"
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 LABS_HOME="${LABS_HOME:-/root/.labs}"
@@ -55,9 +58,14 @@ if command -v node >/dev/null; then
   [ "$have" -ge "$NODE_MAJOR" ] && need_node=0
 fi
 if [ "$need_node" = "1" ]; then
-  say "installing Node ${NODE_MAJOR}.x from NodeSource"
-  curl -fsSL "https://deb.nodesource.com/setup_${NODE_MAJOR}.x" | bash - >/dev/null
-  DEBIAN_FRONTEND=noninteractive apt-get install -y -q nodejs >/dev/null
+  say "installing Node ${NODE_VERSION} from nodejs.org (checksum-verified)"
+  _node_tarball="node-v${NODE_VERSION}-linux-x64.tar.xz"
+  _node_tmp="/tmp/${_node_tarball}"
+  curl -fsSL -o "$_node_tmp" "https://nodejs.org/dist/v${NODE_VERSION}/${_node_tarball}"
+  echo "${NODE_SHA256}  ${_node_tmp}" | sha256sum -c - \
+    || die "Node.js checksum mismatch — verify NODE_SHA256 against nodejs.org/dist/v${NODE_VERSION}/SHASUMS256.txt"
+  tar -xJf "$_node_tmp" -C /usr --strip-components=1
+  rm -f "$_node_tmp"
 fi
 say "node $(node --version) at $(command -v node)"
 [ "$(command -v node)" = "/usr/bin/node" ] || die "config.json expects /usr/bin/node; node is at $(command -v node)"

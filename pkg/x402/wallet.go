@@ -77,9 +77,10 @@ func (w *Wallet) SignTransaction(txBytes []byte) string {
 	return base64.StdEncoding.EncodeToString(out)
 }
 
-// SignRaw signs bytes directly (no intent, no hashing); used only by tests
-// against the SDK's keypair.sign vector.
-func (w *Wallet) SignRaw(msg []byte) []byte { return ed25519.Sign(w.priv, msg) }
+// signRaw signs bytes directly (no intent, no hashing); for use only inside
+// package tests against the SDK's keypair.sign vector. Unexported (L-04) to
+// prevent callers from signing arbitrary bytes without an intent prefix.
+func (w *Wallet) signRaw(msg []byte) []byte { return ed25519.Sign(w.priv, msg) }
 
 // --- bech32 (BIP-173), decode only ---
 
