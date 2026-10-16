@@ -3163,7 +3163,8 @@ func TestProcessMessage_SwitchModelShowModelConsistency(t *testing.T) {
 		ChatID:   "chat1",
 		Content:  "/show model",
 	})
-	if !strings.Contains(showResp, "Current Model: deepseek (Provider: openrouter)") {
+	// single-provider collapse: see 3563ba4
+	if !strings.Contains(showResp, "Current Model: deepseek (Provider: openai)") {
 		t.Fatalf("unexpected /show model reply after switch: %q", showResp)
 	}
 
@@ -3324,11 +3325,12 @@ func TestProcessMessage_SwitchModelRoutesSubsequentRequestsToSelectedProvider(t 
 	if remoteCalls != 1 {
 		t.Fatalf("remote calls after switch = %d, want 1", remoteCalls)
 	}
-	if remoteModel != "deepseek-v3.2" {
+	// single-provider collapse: see 3563ba4
+	if remoteModel != "deepseek/deepseek-v3.2" {
 		t.Fatalf(
 			"remote model after switch = %q, want %q",
 			remoteModel,
-			"deepseek-v3.2",
+			"deepseek/deepseek-v3.2",
 		)
 	}
 }

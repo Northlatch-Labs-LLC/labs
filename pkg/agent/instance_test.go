@@ -111,14 +111,6 @@ func TestNewAgentInstance_ResolveCandidatesFromModelListAlias(t *testing.T) {
 		wantModel    string
 	}{
 		{
-			name:         "alias with provider prefix",
-			aliasName:    "step-3.5-flash",
-			modelName:    "openrouter/stepfun/step-3.5-flash:free",
-			apiBase:      "https://openrouter.ai/api/v1",
-			wantProvider: "openrouter",
-			wantModel:    "stepfun/step-3.5-flash:free",
-		},
-		{
 			name:         "alias without provider prefix",
 			aliasName:    "glm-5",
 			modelName:    "glm-5",
@@ -210,11 +202,12 @@ func TestNewAgentInstance_PreservesDistinctLimiterIdentityForSharedResolvedModel
 
 	first := agent.Candidates[0]
 	second := agent.Candidates[1]
-	if first.Provider != "zhipu" || first.Model != "glm-4.7" {
-		t.Fatalf("first candidate = %s/%s, want zhipu/glm-4.7", first.Provider, first.Model)
+	// single-provider collapse: see 3563ba4
+	if first.Provider != "openai" || first.Model != "zhipu/glm-4.7" {
+		t.Fatalf("first candidate = %s/%s, want openai/zhipu/glm-4.7", first.Provider, first.Model)
 	}
-	if second.Provider != "zhipu" || second.Model != "glm-4.7" {
-		t.Fatalf("second candidate = %s/%s, want zhipu/glm-4.7", second.Provider, second.Model)
+	if second.Provider != "openai" || second.Model != "zhipu/glm-4.7" {
+		t.Fatalf("second candidate = %s/%s, want openai/zhipu/glm-4.7", second.Provider, second.Model)
 	}
 	if first.IdentityKey != "model_name:glm-4.7" {
 		t.Fatalf("first identity key = %q, want %q", first.IdentityKey, "model_name:glm-4.7")
@@ -237,7 +230,9 @@ func TestNewAgentInstance_PreservesConfigIdentityForExplicitProviderModelRef(t *
 		Agents: config.AgentsConfig{
 			Defaults: config.AgentDefaults{
 				Workspace: tmpDir,
-				ModelName: "nvidia/z-ai/glm-5.1",
+				// single-provider collapse: see 3563ba4 — reference the model_list
+				// alias directly; a prefixed raw string no longer resolves to it.
+				ModelName: "nvidia-glm",
 			},
 		},
 		ModelList: []*config.ModelConfig{
@@ -399,31 +394,6 @@ func TestPopulateCandidateProviders_ResolvesAlias(t *testing.T) {
 	}
 }
 
-// TestPopulateCandidateProviders_ResolvesProtocolPrefix verifies that a
-// model_list entry using full "provider/model" notation (e.g.
-// "gemini/gemma-3-27b-it") is matched correctly when referenced by model_name.
-func TestPopulateCandidateProviders_ResolvesProtocolPrefix(t *testing.T) {
-	workspace := t.TempDir()
-	out := map[string]providers.LLMProvider{}
-
-	cfg := &config.Config{
-		ModelList: []*config.ModelConfig{
-			{
-				ModelName: "gemma",
-				Model:     "gemini/gemma-3-27b-it",
-				APIKeys:   config.SimpleSecureStrings("gemini-test-key"),
-				Workspace: workspace,
-			},
-		},
-	}
-	populateCandidateProvidersFromNames(cfg, workspace, []string{"gemma"}, out)
-
-	key := providers.ModelKey("gemini", "gemma-3-27b-it")
-	if out[key] == nil {
-		t.Fatalf("expected CandidateProviders[%q] to be populated for protocol-prefixed model", key)
-	}
-}
-
 // TestPopulateCandidateProviders_EmptyNamesIsNoop verifies the early-exit
 // path when the names slice is empty.
 func TestPopulateCandidateProviders_EmptyNamesIsNoop(t *testing.T) {
@@ -509,9 +479,10 @@ func TestNewAgentInstance_CandidateProvidersPopulatedForCrossProviderFallbacks(t
 	agent := NewAgentInstance(nil, &cfg.Agents.Defaults, cfg, primaryProvider)
 
 	// Only fallback models need entries — the primary uses the injected provider directly.
+	// single-provider collapse: see 3563ba4
 	wantKeys := []string{
-		providers.ModelKey("gemini", "gemma-3-27b-it"),
-		providers.ModelKey("gemini", "gemini-2.5-flash-lite"),
+		providers.ModelKey("openai", "gemini/gemma-3-27b-it"),
+		providers.ModelKey("openai", "gemini/gemini-2.5-flash-lite"),
 	}
 
 	for _, key := range wantKeys {
@@ -707,11 +678,12 @@ model: claude-frontmatter
 	if len(agent.Candidates) != 1 {
 		t.Fatalf("len(agent.Candidates) = %d, want 1", len(agent.Candidates))
 	}
-	if got := agent.Candidates[0].Provider; got != "anthropic" {
-		t.Fatalf("primary candidate provider = %q, want %q", got, "anthropic")
+	// single-provider collapse: see 3563ba4
+	if got := agent.Candidates[0].Provider; got != "openai" {
+		t.Fatalf("primary candidate provider = %q, want %q", got, "openai")
 	}
-	if got := agent.Candidates[0].Model; got != "claude-3-7-sonnet" {
-		t.Fatalf("primary candidate model = %q, want %q", got, "claude-3-7-sonnet")
+	if got := agent.Candidates[0].Model; got != "anthropic/claude-3-7-sonnet" {
+		t.Fatalf("primary candidate model = %q, want %q", got, "anthropic/claude-3-7-sonnet")
 	}
 	if agent.Provider == defaultProvider {
 		t.Fatal("expected primary provider to be resolved from model_list instead of using injected default provider")
