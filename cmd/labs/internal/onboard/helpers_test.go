@@ -18,20 +18,23 @@ func TestCopyEmbeddedToTargetUsesStructuredAgentFiles(t *testing.T) {
 		t.Fatalf("expected %s to exist: %v", agentPath, err)
 	}
 
-	soulPath := filepath.Join(targetDir, "SOUL.md")
-	if _, err := os.Stat(soulPath); err != nil {
-		t.Fatalf("expected %s to exist: %v", soulPath, err)
+	// Re-pinned to the embedded workspace/ tree as shipped today: AGENT.md plus
+	// skills/adoption/* — SOUL.md and USER.md no longer ship (removed by aa5065e).
+	wantFiles := []string{
+		filepath.Join(targetDir, "skills", "adoption", "SKILL.md"),
+		filepath.Join(targetDir, "skills", "adoption", "accept.mjs"),
+		filepath.Join(targetDir, "skills", "adoption", "seek.mjs"),
+	}
+	for _, path := range wantFiles {
+		if _, err := os.Stat(path); err != nil {
+			t.Fatalf("expected %s to exist: %v", path, err)
+		}
 	}
 
-	userPath := filepath.Join(targetDir, "USER.md")
-	if _, err := os.Stat(userPath); err != nil {
-		t.Fatalf("expected %s to exist: %v", userPath, err)
-	}
-
-	for _, legacyName := range []string{"AGENTS.md", "IDENTITY.md"} {
-		legacyPath := filepath.Join(targetDir, legacyName)
-		if _, err := os.Stat(legacyPath); !os.IsNotExist(err) {
-			t.Fatalf("expected legacy file %s to be absent, got err=%v", legacyPath, err)
+	for _, removedName := range []string{"SOUL.md", "USER.md", "AGENTS.md", "IDENTITY.md"} {
+		removedPath := filepath.Join(targetDir, removedName)
+		if _, err := os.Stat(removedPath); !os.IsNotExist(err) {
+			t.Fatalf("expected removed file %s to be absent, got err=%v", removedPath, err)
 		}
 	}
 }

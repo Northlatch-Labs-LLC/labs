@@ -1,0 +1,20 @@
+name: CI
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  gates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.27"
+      - name: "Gate: build"
+        run: go build ./...
+      - name: "Gate: vet"
+        run: go vet ./...
+      - name: "Gate: test"
+        run: go test ./...
